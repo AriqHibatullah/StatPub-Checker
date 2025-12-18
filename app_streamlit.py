@@ -63,6 +63,9 @@ st.markdown("""
         color: #1a535c !important;
         border: 1px solid rgba(26, 83, 92, 0.4) !important;
     }
+    [data-testid="stSidebar"] {
+        background: #fafcfa !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -80,6 +83,9 @@ with st.sidebar:
             - Mengubah file output agar lebih memudahkan pengguna.
         """)
     st.info("Version 0.2.0")
+
+    st.write(" ")
+    st.write(" ")
     st.markdown("""
         <div style="padding: 10px; border-radius: 10px">
             <p style="margin:0; font-size:0.8rem; color:#1a535c;">Developed By:</p>
