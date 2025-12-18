@@ -9,7 +9,7 @@ Coba aplikasi web-nya disini:
 ## ✨ Features
 - 🎯 Pemeriksaan ejaan dan penulisan otomatis pada file DOCX/PDF
 - 🖊️ Review & Seleksi hasil pemeriksaan
-- 📃 Konfersi draft file dari hasil seleksi
+- 📃 Konversi draft file dari hasil seleksi
 
 ## 🎥 Demo Video
 Tonton video demonstrasinya disini:
