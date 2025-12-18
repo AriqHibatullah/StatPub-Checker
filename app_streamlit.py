@@ -348,7 +348,7 @@ if run_btn:
         st.info(f"Memproses {len(saved_paths)} file…")
 
         with st.spinner("Running spellcheck…"):
-            findings = run_pipeline_on_paths(saved_paths, user_vocab=user_vocab)
+            findings = run_pipeline_on_paths(saved_paths)
 
         df = findings_to_dataframe(findings)
 
