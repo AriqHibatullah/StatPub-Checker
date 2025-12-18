@@ -53,6 +53,16 @@ st.markdown("""
         background-color: #ffe246 !important;
         color: white !important;
     }
+    div[data-testid="stSlider"] div[data-baseweb="slider"] div[role="progressbar"] > div {
+        background: #3b82f6 !important;   /* filled */
+    }
+    div[data-testid="stSlider"] div[data-baseweb="slider"] div[role="progressbar"] {
+        background: rgba(59,130,246,0.25) !important; /* unfilled */
+    }
+    div[data-testid="stSlider"] div[data-baseweb="slider"] div[role="slider"] {
+        background-color: #3b82f6 !important; 
+        border-color: #3b82f6 !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
