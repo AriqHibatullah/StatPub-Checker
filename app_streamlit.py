@@ -736,6 +736,32 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
                     df_raw_dev = df_all.copy()
 
                 df_eval_full = df_all.copy()
+                
+                abbr_confirmed_count = 0
+                if "status" in df_eval_full.columns:
+                    abbr_confirmed_count = int((df_eval_full["status"] == "abbr_confirmed").sum())
+
+                replaced = int((df_eval_full["action"] == "replaced").sum())
+                ignored  = int((df_eval_full["action"] == "ignored").sum())
+                total    = int(len(df_eval_full))
+                
+                den = replaced + ignored
+                acceptance_rate = (replaced / den) if den > 0 else None
+
+                custom_used = int(((df_eval_full["action"] == "replaced") & (df_eval_full["fix_custom"].astype(str).str.strip().str.len() > 0)).sum()) if "fix_custom" in df_eval_full.columns else None
+                custom_rate = (custom_used / replaced) if (custom_used is not None and replaced > 0) else None
+
+                non_top1_count = 0
+                if replaced > 0:
+                    non_top1_count = int((
+                        (df_eval_full["action"] == "replaced") &
+                        (
+                            (df_eval_full["fix_choice"].isin(["suggestion_2", "suggestion_3", "custom"])) |
+                            (df_eval_full["fix_custom"].astype(str).str.strip().str.len() > 0)
+                        )
+                    ).sum())
+                
+                non_top1_rate = (non_top1_count / replaced) if replaced > 0 else None
 
                 meta = {
                     "run_id": run_id,
@@ -750,6 +776,13 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
                         "total_findings": int(len(df_eval_full)),
                         "replaced": int((df_eval_full["action"] == "replaced").sum()) if "action" in df_eval_full.columns else None,
                         "ignored": int((df_eval_full["action"] == "ignored").sum()) if "action" in df_eval_full.columns else None,
+                        "non_top1_count": non_top1_count,
+                        "abbr_confirmed": abbr_confirmed_count,
+                    },
+                    "accuracy": {
+                        "precision_proxy": acceptance_rate,
+                        "custom_rate": custom_rate,
+                        "non_top1_rate": non_top1_rate,
                     },
                     "user_vocab": st.session_state.get("user_vocab", []),
                     "user_vocab_count": len(st.session_state.get("user_vocab", [])),
