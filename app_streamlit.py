@@ -774,4 +774,3 @@ st.caption(
     "Catatan: Beta ini memakai kamus & model yang masih dikembangkan. "
     "Data akan selalu diupdate untuk memaksimalkan performa."
 )
-meta
