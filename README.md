@@ -1,10 +1,21 @@
-# StatPub Checker - Publication Spell Checker & Converter App
+# 🔮 StatPub Checker - Publication Spell Checker & Converter App
 **StatPub Checker** adalah aplikasi web interaktif berbasis **Streamlit** yang dapat memeriksa kesalahan ejaan dan penulisan suatu kata yang terdapat pada publikasi resmi dan mengonversikannya ke dalam bentuk yang sesuai.
 
 ## 🚀 Try the App
 Coba aplikasi web-nya disini:
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://statpub-checker.streamlit.app/)
+
+## ✨ Features
+- 🎯 Pemeriksaan ejaan dan penulisan otomatis pada file DOCX/PDF
+- 🖊️ Review & Seleksi hasil pemeriksaan
+- 📃 Konfersi draft file dari hasil seleksi
+
+## 🎥 Demo Video
+Tonton video demonstrasinya disini:
+
+## 🛠️ Tech Stack
+- **Frontend:** Streamlit
 
 ## 👤 Authors
 Project ini dikembangkan oleh:
