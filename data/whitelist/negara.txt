@@ -1,0 +1,406 @@
+Afghanistan
+Albania
+Algeria
+Andorra
+Angola
+Antigua and Barbuda
+Argentina
+Armenia
+Australia
+Austria
+Azerbaijan
+Bahamas
+Bahrain
+Bangladesh
+Barbados
+Belarus
+Belgium
+Belize
+Benin
+Bhutan
+Bolivia
+Bosnia and Herzegovina
+Botswana
+Brazil
+Brunei
+Bulgaria
+Burkina Faso
+Burundi
+Cabo Verde
+Cambodia
+Cameroon
+Canada
+Central African Republic
+Chad
+Chile
+China
+Colombia
+Comoros
+Congo
+Congo Republic
+Congo Democratic Republic
+Costa Rica
+Croatia
+Cuba
+Cyprus
+Czech Republic
+Denmark
+Djibouti
+Dominica
+Dominican Republic
+Ecuador
+Egypt
+El Salvador
+Equatorial Guinea
+Eritrea
+Estonia
+Eswatini
+Ethiopia
+Fiji
+Finland
+France
+Gabon
+Gambia
+Georgia
+Germany
+Ghana
+Greece
+Grenada
+Guatemala
+Guinea
+Guinea-Bissau
+Guyana
+Haiti
+Honduras
+Hungary
+Iceland
+India
+Indonesia
+Iran
+Iraq
+Ireland
+Israel
+Italy
+Jamaica
+Japan
+Jordan
+Kazakhstan
+Kenya
+Kiribati
+Korea
+North Korea
+Korea Utara
+Sounth Korea
+Korea Selatan
+Kuwait
+Kyrgyzstan
+Laos
+Latvia
+Lebanon
+Lesotho
+Liberia
+Libya
+Liechtenstein
+Lithuania
+Luxembourg
+Madagascar
+Malawi
+Malaysia
+Maldives
+Mali
+Malta
+Marshall Islands
+Mauritania
+Mauritius
+Mexico
+Micronesia
+Moldova
+Monaco
+Mongolia
+Montenegro
+Morocco
+Mozambique
+Myanmar
+Namibia
+Nauru
+Nepal
+Netherlands
+New Zealand
+Nicaragua
+Niger
+Nigeria
+North Macedonia
+Norway
+Oman
+Pakistan
+Palau
+Palestine
+Panama
+Papua New Guinea
+Paraguay
+Peru
+Philippines
+Poland
+Portugal
+Qatar
+Romania
+Russia
+Rwanda
+Saint Kitts and Nevis
+Saint Lucia
+Saint Vincent and the Grenadines
+Samoa
+San Marino
+Sao Tome and Principe
+Saudi Arabia
+Senegal
+Serbia
+Seychelles
+Sierra Leone
+Singapore
+Slovakia
+Slovenia
+Solomon Islands
+Somalia
+South Africa
+South Sudan
+Spain
+Sri Lanka
+Sudan
+Suriname
+Sweden
+Switzerland
+Syria
+Taiwan*
+Tajikistan
+Tanzania
+Thailand
+Timor-Leste
+Togo
+Tonga
+Trinidad and Tobago
+Tunisia
+Turkey
+Turkmenistan
+Tuvalu
+Uganda
+Ukraine
+United Arab Emirates
+United Kingdom
+United States
+Uruguay
+Uzbekistan
+Vanuatu
+Vatican City
+Venezuela
+Vietnam
+Yemen
+Zambia
+Zimbabwe
+Amerika
+america
+
+Asia
+Eropa
+Afrika
+Antarktika
+Amerika Selatan
+Amerika utara
+
+Afghanistan
+Albania
+Aljazair
+Andorra
+Angola
+Antigua dan Barbuda
+Argentina
+Armenia
+Australia
+Austria
+Azerbaijan
+Bahama
+Bahrain
+Bangladesh
+Barbados
+Belarus
+Belgia
+Belize
+Benin
+Bhutan
+Bolivia
+Bosnia dan Herzegovina
+Botswana
+Brasil
+Brunei 
+Darussalam
+Bulgaria
+Burkina Faso
+Burundi
+Kepulauan Tanjung Verde
+Kamboja
+Kamerun
+Kanada
+Republik Afrika Tengah
+Chad
+Cile
+Tiongkok
+Kolombia
+Komoro
+Republik Kongo
+Republik Demokratik Kongo
+Kosta Rika
+Kroasia
+Kuba
+Siprus
+Ceko
+Denmark
+Djibouti
+Dominika
+Republik Dominika
+Ekuador
+Mesir
+El Salvador
+Guinea Khatulistiwa
+Eritrea
+Estonia
+Eswatini
+Etiopia
+Fiji
+Finlandia
+Prancis
+Gabon
+Gambia
+Georgia
+Jerman
+Ghana
+Yunani
+Grenada
+Guatemala
+Guinea
+Guinea-Bissau
+Guyana
+Haiti
+Honduras
+Hungaria
+Islandia
+India
+Indonesia
+Iran
+Irak
+Irlandia
+Israel
+Italia
+Jamaika
+Jepang
+Yordania
+Kazakhstan
+Kenya
+Kiribati
+Korea Utara
+Korea Selatan
+Kuwait
+Kirgizstan
+Laos
+Latvia
+Lebanon
+Lesotho
+Liberia
+Libya
+Liechtenstein
+Lituania
+Luksemburg
+Madagaskar
+Malawi
+Malaysia
+Maladewa
+Mali
+Malta
+Kepulauan Marshall
+Mauritania
+Mauritius
+Meksiko
+Mikronesia
+Moldova
+Monako
+Mongolia
+Montenegro
+Maroko
+Mozambik
+Myanmar
+Namibia
+Nauru
+Nepal
+Belanda
+Selandia 
+Baru
+Nikaragua
+Niger
+Nigeria
+Makedonia Utara
+Norwegia
+Oman
+Pakistan
+Palau
+Palestina
+Panama
+Papua Nugini
+Paraguay
+Peru
+Filipina
+Polandia
+Portugal
+Qatar
+Rumania
+Rusia
+Rwanda
+Saint Kitts dan Nevis
+Saint Lucia
+Saint Vincent dan Grenadines
+Samoa
+San Marino
+Sao Tome dan Principe
+Arab Saudi
+Senegal
+Serbia
+Seychelles
+Sierra Leone
+Singapura
+Slovakia
+Slovenia
+Kepulauan Solomon
+Somalia
+Afrika Selatan
+Sudan Selatan
+Spanyol
+Sri Lanka
+Sudan
+Suriname
+Swedia
+Swiss
+Suriah
+Taiwan*
+Tajikistan
+Tanzania
+Thailand
+Timor Leste
+Togo
+Tonga
+Trinidad dan Tobago
+Tunisia
+Turki
+Turkmenistan
+Tuvalu
+Uganda
+Ukraina
+Uni Emirat Arab
+Inggris Raya
+Amerika Serikat
+Uruguay
+Uzbekistan
+Vanuatu
+Vatikan
+Venezuela
+Vietnam
+Yaman
+Zambia
+Zimbabwe

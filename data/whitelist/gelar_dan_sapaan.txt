@@ -1,0 +1,236 @@
+Tn.
+Ny.
+Nn.
+Sdri.
+Sdr.
+An.
+Bp.
+Ibu
+Bpk
+Kak
+Bang
+Mas
+Mbak
+Adik
+Saudara
+Saudari
+Tuan
+Nyonya
+Nona
+
+Dr.
+Drs.
+Dra.
+Drg.
+Drh.
+Prof.
+Ir.
+H.
+Hj.
+KH.
+Ust.
+Ustz.
+Ustadz
+Ustadzah
+Alm.
+Almh.
+Almarhum
+Almarhumah
+R.A.
+R.K.
+R.M.
+Raden
+Raden Ayu
+Raden Mas
+Gusti
+Gusti Ayu
+Gusti Bagus
+Kanjeng
+Kanjeng Raden
+
+S.H.
+S.E.
+S.Kom.
+S.Ked.
+S.Psi.
+S.T.
+S.Sos.
+S.Pd.
+S.Farm.
+S.M.
+S.Ag.
+S.IP.
+S.Si.
+S.Kep.
+S.Gz.
+S.Sn.
+S.Par.
+S.Hum.
+
+M.H.
+M.M.
+M.Kom.
+M.T.
+M.Pd.
+M.Si.
+M.Ak.
+M.A.
+M.Psi.
+M.Ked.
+M.Farm.
+M.B.A.
+M.Sc.
+
+Ph.D.
+Ed.D.
+M.D.
+D.D.S.
+D.O.
+J.D.
+LL.M.
+LL.B.
+B.A.
+B.Sc.
+M.Sc.
+D.Sc.
+
+Mr.
+Mrs.
+Ms.
+Miss
+Sir
+Dame
+Madam
+Madame
+Lady
+Lord
+
+His Excellency
+Her Excellency
+Your Excellency
+Your Majesty
+His Majesty
+Her Majesty
+His Highness
+Her Highness
+Your Highness
+
+Hon.
+Rt. Hon.
+Esq.
+QC
+KC
+
+Sen.
+Rep.
+Gov.
+Pres.
+VP
+Amb.
+Col.
+Capt.
+Cmdr.
+Maj.
+Gen.
+Lt.
+Sgt.
+
+Fr.
+Sr.
+Br.
+Pr.
+Rev.
+Pastor
+Bishop
+Cardinal
+Pope
+
+Mister
+Master
+Ma’am
+
+Monsieur
+Madame
+Mademoiselle
+
+Herr
+Frau
+Fräulein
+
+Señor
+Señora
+Señorita
+Don
+Doña
+
+Signor
+Signora
+Signorina
+
+Pan
+Pani
+
+Tuan Guru
+Bu Guru
+Pak Guru
+Bu Dokter
+Pak Dokter
+
+Yang Mulia
+Yang Terhormat
+Yth.
+
+OP
+CEO
+COO
+CFO
+Dir.
+Komisaris
+Direktur
+Manager
+Supervisor
+Ketua
+Sekretaris
+Bendahara
+Kepala
+Camat
+Lurah
+Gubernur
+Walikota
+Bupati
+Anggota
+DPR
+DPD
+Menteri
+Wamen
+Presiden
+Wapres
+Raja
+Ratu
+Pangeran
+Putri
+
+Ayah
+Ibu
+Papa
+Mama
+Papi
+Mami
+Abi
+Umi
+Bunda
+
+Bro
+Sis
+Mate
+Buddy
+Dude
+Pal
+Homie
+Bestie
+Bruh
+Fam
+Boss
+Chief
+Sir
+Ma'am
