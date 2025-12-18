@@ -44,14 +44,24 @@ st.markdown("""
     .stApp, .stApp * {
         color: #1a535c;
     }
-    .stButton > button {
+    .stButton > button:not([disabled]) {
         background-color: #ffe66d !important;
         color: white !important;
         border: none !important;
     }
-    .stButton > button:hover {
+    .stButton > button:not([disabled]):hover {
         background-color: #ffe246 !important;
         color: white !important;
+    }
+    .stButton > button[kind="secondary"]:not([disabled]) {
+        background-color: #f7fff7 !important;
+        color: #1a535c !important;
+        border: 1px solid rgba(26, 83, 92, 0.4) !important;
+    }
+    .stButton > button[kind="secondary"]:not([disabled]):hover {
+        background-color: #F0F2F6 !important;
+        color: #1a535c !important;
+        border: 1px solid rgba(26, 83, 92, 0.4) !important;
     }
     </style>
 """, unsafe_allow_html=True)
