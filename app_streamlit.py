@@ -334,15 +334,21 @@ def replace_in_docx_bytes(docx_bytes: bytes, replacements: dict[str, str]) -> by
     doc.save(out)
     return out.getvalue()
 
-def upload_to_supabase(bucket: str, path: str, content: bytes, content_type="text/csv"):
+def upload_to_supabase(bucket: str, path: str, content: bytes, content_type: str = "text/csv", upsert: bool = True):
     supabase = create_client(
-        st.secrets["SUPABASE_URL"],
-        st.secrets["SUPABASE_SERVICE_ROLE_KEY"]
+        st.secrets["URL"],
+        st.secrets["ROLE_KEY"],
     )
+
+    file_options = {
+        "content-type": content_type,
+        "x-upsert": "true" if upsert else "false",
+    }
+
     supabase.storage.from_(bucket).upload(
         path,
         content,
-        file_options={"content-type": content_type, "upsert": True}
+        file_options=file_options,
     )
 
 if run_btn:
