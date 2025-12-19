@@ -860,12 +860,6 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
                     content_type="text/plain",
                 )
 
-                insert_dev_run(
-                    run_id=run_id,
-                    base_path=base_path,
-                    total_findings=len(df_eval_full),
-                )
-
                 try:
                     to_email = st.secrets.get("EMAIL_TO", "ISI_SENDIRI@gmail.com")
                     subject = f"[StatPub Checker] Dev report masuk — run_id: {run_id}"
