@@ -1,5 +1,9 @@
 # 🔮 StatPub Checker - Publication Spell Checker & Converter App
-**StatPub Checker** adalah aplikasi web interaktif berbasis **Streamlit** yang dapat memeriksa kesalahan ejaan dan penulisan suatu kata yang terdapat pada publikasi resmi dan mengonversikannya ke dalam bentuk yang sesuai.
+**StatPub Checker** adalah aplikasi web berbasis Natural Language Processing (NLP) yang dirancang untuk membantu pemeriksaan kualitas penulisan pada naskah publikasi statistik, khususnya dalam mendeteksi kesalahan penulisan, inkonsistensi istilah, dan potensi typo pada dokumen DOCX/PDF.
+
+Aplikasi ini mengombinasikan analisis linguistik otomatis dengan evaluasi pengguna (human-in-the-loop) untuk menghasilkan koreksi yang lebih akurat, kontekstual, dan sesuai dengan standar penulisan publikasi statistik.
+
+> 🖥️ StatPub Checker dikembangkan sebagai alat bantu untuk meningkatkan kualitas publikasi statistik melalui pendekatan NLP yang praktis, transparan, dan berorientasi pada pengguna.
 
 ## 🚀 Try the App
 Coba aplikasi web-nya disini:
@@ -7,15 +11,23 @@ Coba aplikasi web-nya disini:
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://statpub-checker.streamlit.app/)
 
 ## ✨ Features
-- 🎯 Pemeriksaan ejaan dan penulisan otomatis pada file DOCX/PDF
-- 🖊️ Review & Seleksi hasil pemeriksaan
-- 📃 Konversi draft file dari hasil seleksi
+- 📥 Upload & Pemeriksaan Dokumen DOCX/PDF
+- 🎯 Deteksi Kesalahan Penulisan dan Rekomendasi Koreksi Otomatis
+- 🖊️ Review & Seleksi Hasil Pemeriksaan oleh Pengguna
+- 📃 Konversi Draft File dari Hasil Seleksi
 
 ## 🎥 Demo Video
 Tonton video demonstrasinya disini:
 
 ## 🛠️ Tech Stack
 - **Frontend:** Streamlit
+- **Processing:** Python, pandas, python-docx, regex, SymSpell
+- **NLP Resource:** KBBI, Kamus Indonesia & Inggris, Domain-specific vocabulary, Protected phrases & names
+
+## 🚧 Status Proyek
+Tahap: Beta / Pengembangan
+Sistem dan kamus masih terus diperbarui
+Hasil pemeriksaan tetap memerlukan validasi pengguna
 
 ## 👤 Authors
 Project ini dikembangkan oleh:
