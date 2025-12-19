@@ -6,6 +6,7 @@ import json
 import uuid
 import zipfile
 import tempfile
+import requests
 from docx import Document
 from pathlib import Path
 from typing import List, Dict, Any
@@ -334,23 +335,49 @@ def replace_in_docx_bytes(docx_bytes: bytes, replacements: dict[str, str]) -> by
     doc.save(out)
     return out.getvalue()
 
-def get_supabase():
-    return create_client(
+def send_email_resend(
+    to_email: str,
+    subject: str,
+    html: str,
+    from_email: str | None = None,
+    api_key: str | None = None,
+    timeout_s: int = 20,
+):
+    api_key = api_key or st.secrets.get("RESEND_API_KEY")
+    if not api_key:
+        raise ValueError("RESEND_API_KEY tidak ditemukan di st.secrets")
+
+    from_email = from_email or st.secrets.get("EMAIL_FROM")
+    if not from_email:
+        raise ValueError("EMAIL_FROM tidak ditemukan di st.secrets (mis: 'StatPub Checker <no-reply@domainmu.com>')")
+
+    payload = {
+        "from": from_email,
+        "to": [to_email],
+        "subject": subject,
+        "html": html,
+    }
+
+    r = requests.post(
+        "https://api.resend.com/emails",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        json=payload,
+        timeout=timeout_s,
+    )
+
+    if r.status_code >= 400:
+        raise RuntimeError(f"Resend error {r.status_code}: {r.text}")
+
+    return r.json()
+    
+def upload_to_supabase(bucket: str, path: str, content: bytes, content_type: str = "text/csv", upsert: bool = True):
+    supabase = create_client(
         st.secrets["URL"],
         st.secrets["ROLE_KEY"],
     )
-
-def insert_dev_run(run_id: str, base_path: str, total_findings: int):
-    supabase = get_supabase()
-    supabase.table("dev_runs").upsert({
-        "run_id": run_id,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "base_path": base_path,
-        "total_findings": int(total_findings),
-    }).execute()
-    
-def upload_to_supabase(bucket: str, path: str, content: bytes, content_type: str = "text/csv", upsert: bool = True):
-    supabase = get_supabase()
 
     file_options = {
         "content-type": content_type,
@@ -838,6 +865,21 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
                     base_path=base_path,
                     total_findings=len(df_eval_full),
                 )
+
+                try:
+                    to_email = st.secrets.get("EMAIL_TO", "ISI_SENDIRI@gmail.com")
+                    subject = f"[StatPub Checker] Dev report masuk — run_id: {run_id}"
+                    html = f"""
+                      <h3>Dev report baru masuk</h3>
+                      <ul>
+                        <li><b>run_id</b>: {run_id}</li>
+                        <li><b>base_path</b>: {base_path}</li>
+                        <li><b>total_findings</b>: {len(df_eval_full)}</li>
+                      </ul>
+                    """
+                    send_email_resend(to_email=to_email, subject=subject, html=html)
+                except Exception as e:
+                    st.warning(f"(Dev) Email notif gagal: {e}")
 
             except Exception as e:
                 st.warning(f"(Dev) Upload report gagal: {e}")
