@@ -10,7 +10,7 @@ from docx import Document
 from pathlib import Path
 from typing import List, Dict, Any
 from supabase import create_client
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pandas as pd
 import streamlit as st
@@ -334,11 +334,23 @@ def replace_in_docx_bytes(docx_bytes: bytes, replacements: dict[str, str]) -> by
     doc.save(out)
     return out.getvalue()
 
-def upload_to_supabase(bucket: str, path: str, content: bytes, content_type: str = "text/csv", upsert: bool = True):
-    supabase = create_client(
+def get_supabase():
+    return create_client(
         st.secrets["URL"],
         st.secrets["ROLE_KEY"],
     )
+
+def insert_dev_run(run_id: str, base_path: str, total_findings: int):
+    supabase = get_supabase()
+    supabase.table("dev_runs").upsert({
+        "run_id": run_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "base_path": base_path,
+        "total_findings": int(total_findings),
+    }).execute()
+    
+def upload_to_supabase(bucket: str, path: str, content: bytes, content_type: str = "text/csv", upsert: bool = True):
+    supabase = get_supabase()
 
     file_options = {
         "content-type": content_type,
@@ -819,6 +831,12 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
                     path=f"{base_path}/user_vocab.txt",
                     content=uv.encode("utf-8"),
                     content_type="text/plain",
+                )
+
+                insert_dev_run(
+                    run_id=run_id,
+                    base_path=base_path,
+                    total_findings=len(df_eval_full),
                 )
 
             except Exception as e:
