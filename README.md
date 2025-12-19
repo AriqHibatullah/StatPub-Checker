@@ -25,9 +25,7 @@ Tonton video demonstrasinya disini:
 - **NLP Resource:** KBBI, Kamus Indonesia & Inggris, Domain-specific vocabulary, Protected phrases & names
 
 ## 🚧 Status Proyek
-Tahap: Beta / Pengembangan
-Sistem dan kamus masih terus diperbarui
-Hasil pemeriksaan tetap memerlukan validasi pengguna
+Tahap: Beta / Pengembangan. Sistem dan kamus masih terus diperbarui
 
 ## 👤 Authors
 Project ini dikembangkan oleh:
