@@ -186,7 +186,7 @@ with colA1:
 
 with colA2:
     user_vocab_text = st.text_area(
-            "Masukkan kata tambahan",
+            "Masukkan kata tambahan jika ada",
             height = 150,
             placeholder = "Contoh:\nStunting\nBig Data\n...",
             help = "Masukan kata yang khusus dan tidak ada di KBBI, seperti nama orang atau tempat"
