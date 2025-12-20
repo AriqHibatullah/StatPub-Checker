@@ -159,7 +159,7 @@ uploads = st.file_uploader(
         help = "Untuk file pdf, disarankan agar file tidak mempunyai watermark untuk performa optimal."
     )
 
-colA1, colA2, = st.columns([2,1])
+colA1, colA2, = st.columns([2,3])
 
 with colA1:
     # colB, colC = st.columns([1, 1])
