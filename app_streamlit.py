@@ -67,6 +67,9 @@ st.markdown("""
     [data-testid="stSidebar"] {
         background: #fafcfa !important;
     }
+    div[data-baseweb="slider"] > div > div > div {
+        background: linear-gradient(90deg, #22c55e, #3b82f6);
+    }
     </style>
 """, unsafe_allow_html=True)
 
