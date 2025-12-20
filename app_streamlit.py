@@ -172,7 +172,7 @@ with colA1:
         )   
     
         show_only_top1_if_conf_ge = st.slider(
-            "Jika conf ≥ ini, tampilkan Top-1 saja",
+            "Skor Confidence untuk top-1",
             min_value=0.0,
             max_value=1.0,
             value=0.72,
