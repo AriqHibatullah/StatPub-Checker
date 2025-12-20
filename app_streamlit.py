@@ -167,7 +167,8 @@ with colA1:
     with colB:
         tipe_publikasi = st.selectbox(
             "Tipe publikasi",
-            ["Monolingual", "Bilingual"]
+            ["Monolingual", "Bilingual"],
+            help="Pilih tipe yang sesuai untuk memudahkan program memeriksa dokumen"
         )   
     
         show_only_top1_if_conf_ge = st.slider(
