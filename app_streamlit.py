@@ -811,7 +811,7 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
                     "ts_utc": ts_utc,
                     "files": sorted(list(st.session_state.get("upload_bytes_by_name", {}).keys())),
                     "config": {
-                        "topk": int(topk),
+                        "tipe_dokumen": tipe_publikasi,
                         "max_findings": int(max_findings),
                         "show_only_top1_if_conf_ge": float(show_only_top1_if_conf_ge),
                     },
