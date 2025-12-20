@@ -165,8 +165,6 @@ with colA1:
     colB, colC = st.columns([1, 1])
 
     with colB:
-        topk = st.number_input("Top-K saran", min_value=1, max_value=10, value=3, step=1, help="Masukkan jumlah saran yang akan diberikan program (Saran optimal: 3)")
-
         show_only_top1_if_conf_ge = st.slider(
             "Jika conf ≥ ini, tampilkan Top-1 saja",
             min_value=0.0,
@@ -280,7 +278,7 @@ def parse_id_ranges(text: str) -> set[int]:
 
 def run_pipeline_on_paths(paths: List[str]) -> List[Any]:
     cfg = Settings(
-        topk=int(topk),
+        topk=int(3),
         max_findings_per_file=int(max_findings),
         show_only_top1_if_conf_ge=float(show_only_top1_if_conf_ge),
     )
