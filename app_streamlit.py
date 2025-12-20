@@ -165,6 +165,9 @@ with colA1:
     colB, colC = st.columns([1, 1])
 
     with colB:
+        max_findings = st.number_input("Max temuan per file", min_value=50, max_value=5000, value=200, step=50)
+
+    with colC:
         show_only_top1_if_conf_ge = st.slider(
             "Jika conf ≥ ini, tampilkan Top-1 saja",
             min_value=0.0,
@@ -174,9 +177,6 @@ with colA1:
             format="%.2f",
             help="Masukkan skor Confidence dari saran kata yang dianggap 'pasti benar'"
         )
-
-    with colC:
-        max_findings = st.number_input("Max temuan per file", min_value=50, max_value=5000, value=200, step=50)
 
 with colA2:
     user_vocab_text = st.text_area(
