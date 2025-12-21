@@ -34,7 +34,7 @@ Project ini dikembangkan oleh:
 - Firdaini Azmi - S1 Sains Data
 
 ## 🆕 Update Log
-### 21 Desember 2025
+### 🔹 21 Desember 2025
 Manual Book penggunaan Aplikasi Web StatPub Checker telah rilis!
 
 ### 🔸 v0.2.1 – 19 Desember 2025
