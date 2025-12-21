@@ -35,10 +35,12 @@ Project ini dikembangkan oleh:
 
 ## 🆕 Update Log
 ### 🔹 21 Desember 2025
-Manual Book penggunaan Aplikasi Web StatPub Checker telah rilis!
+- Manual Book penggunaan Aplikasi Web StatPub Checker telah rilis!
 
-### 🔸 v0.2.1 – 19 Desember 2025
-Menambahkan sedikit penyesuaian pada program untuk developer.
+### 🔸 v0.2.1 – 20 Desember 2025
+- Menambahkan input Tipe publikasi untuk pengguna
+- Menghapus input Threshold Confidence untuk pengguna
+- Menambahkan sedikit penyesuaian pada program untuk developer
 
 ### 🔸 v0.2.0 – 18 Desember 2025
 - Menambahkan fitur Review & Seleksi untuk mengoptimalkan output konfersi
