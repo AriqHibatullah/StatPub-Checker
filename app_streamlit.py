@@ -75,15 +75,16 @@ with st.sidebar:
     st.caption("Lihat demo Web App StatPub Checker [di sini](https://docs.streamlit.io).")
     with st.expander("📘 Cara penggunaan"):
         st.markdown("""
-            Panduan lengkap bagaimana cara menggunakan StatPub Checker tersedia [di sini](https://docs.streamlit.io).
+            Panduan lengkap bagaimana cara menggunakan StatPub Checker tersedia [di sini](https://drive.google.com/file/d/1fFY97-FEgeOVvuf18r_1Ckvz6hHMjwD2/view?usp=sharing).
         """)
     with st.expander("ℹ️ Release Note Terbaru"):
         st.markdown("""
-            ## v0.2.0\n
-            - Menambahkan fitur Review & Seleksi untuk mengoptimalkan output.
-            - Mengubah file output agar lebih memudahkan pengguna.
+            ## v0.2.1\n
+            - Menambahkan input Tipe publikasi untuk pengguna
+            - Menghapus input Threshold Confidence untuk pengguna
+            - Menambahkan sedikit penyesuaian pada program untuk developer
         """)
-    st.info("Version 0.2.0")
+    st.info("Version 0.2.1")
 
     st.write(" ")
     st.write(" ")
