@@ -491,8 +491,7 @@ if st.session_state.report_ready and st.session_state.df is not None:
         st.markdown("**Lihat preview dokumen**")
         file_pilih = (
             st.multiselect("Pilih file", sorted(df_view["file"].dropna().unique().tolist()))
-            if "file" in df_view.columns else [],
-            help="Pilih dokumen yang ingin ditampilkan preview dan highligh temuannya"
+            if "file" in df_view.columns else []
         )
 
         preview_btn = st.button("Tampilkan preview", type="secondary")
