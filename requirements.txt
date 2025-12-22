@@ -4,3 +4,4 @@ python-docx
 pdfplumber
 Sastrawi
 supabase
+streamlit-pdf
