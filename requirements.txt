@@ -4,4 +4,4 @@ python-docx
 pdfplumber
 Sastrawi
 supabase
-docx2pdf
+libreoffice
