@@ -27,7 +27,7 @@ WL_DIR = DATA_DIR / "whitelist"
 MODEL_DIR = DATA_DIR / "models"
 
 from spellchecker.vocab.loaders import load_kbbi_words, load_txt_set
-from spellchecker.extractors.docx_extractor import docx_to_pdf_bytes
+from spellchecker.extractors.docx_extractor import docx_bytes_to_pdf_bytes
 from spellchecker.pipeline import run_on_file, build_vocabs
 from spellchecker.settings import Settings
 
@@ -495,12 +495,22 @@ if st.session_state.report_ready and st.session_state.df is not None:
             file_pilih = st.selectbox("Pilih file", options) if len(options) else None
 
         preview_btn = st.button("Tampilkan preview", type="secondary")
-        if preview_btn:
-            if file_pilih.lower().endswith(".pdf"):
-                st.write(file_pilih)
-            else:
-                st.write(file_pilih)
+        if preview_btn and file_pilih:
+            b = st.session_state.upload_bytes_by_name.get(file_pilih)
 
+            if b is None:
+                st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
+            else:
+                if file_pilih.lower().endswith(".pdf"):
+                    st.pdf(b, height=600)
+                elif file_pilih.lower().endswith(".docx"):
+                    try:
+                        pdf_bytes = docx_bytes_to_pdf_bytes(b)
+                        st.pdf(pdf_bytes, height=600)
+                    except Exception as e:
+                        st.error(f"Gagal convert DOCX ke PDF: {e}")
+                else:
+                    st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
         
         st.markdown("**Temuan per file**")
         if "file" in df_view.columns and len(df_view) > 0:
