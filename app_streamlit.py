@@ -501,16 +501,18 @@ if st.session_state.report_ready and st.session_state.df is not None:
             if b is None:
                 st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
             else:
-                if file_pilih.lower().endswith(".pdf"):
-                    st.pdf(b, height=600)
-                elif file_pilih.lower().endswith(".docx"):
-                    try:
-                        pdf_bytes = docx_bytes_to_pdf_bytes(b)
-                        st.pdf(pdf_bytes, height=600)
-                    except Exception as e:
-                        st.error(f"Gagal convert DOCX ke PDF: {e}")
-                else:
-                    st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
+                cols = st.columns(2)
+                with cols[0]:
+                    if file_pilih.lower().endswith(".pdf"):
+                        st.pdf(b, height=600)
+                    elif file_pilih.lower().endswith(".docx"):
+                        try:
+                            pdf_bytes = docx_bytes_to_pdf_bytes(b)
+                            st.pdf(pdf_bytes, height=600)
+                        except Exception as e:
+                            st.error(f"Gagal convert DOCX ke PDF: {e}")
+                    else:
+                        st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
         
         st.markdown("**Temuan per file**")
         if "file" in df_view.columns and len(df_view) > 0:
