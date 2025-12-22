@@ -490,9 +490,16 @@ if st.session_state.report_ready and st.session_state.df is not None:
     with tab2:
         st.markdown("**Lihat preview dokumen**")
         file_pilih = None
+        if "pdf_cache_by_name" not in st.session_state:
+            st.session_state.pdf_cache_by_name = {}
+            
         if "file" in df_view.columns:
             options = sorted(df_view["file"].dropna().astype(str).unique())
+            options = ["— Pilih file —"] + options
             file_pilih = st.selectbox("Pilih file", options) if len(options) else None
+            
+            if file_pilih == "— Pilih file —":
+                file_pilih = None
 
         preview_btn = st.button("Tampilkan preview", type="secondary")
         if preview_btn and file_pilih:
@@ -501,18 +508,25 @@ if st.session_state.report_ready and st.session_state.df is not None:
             if b is None:
                 st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
             else:
-                cols = st.columns(2)
-                with cols[0]:
-                    if file_pilih.lower().endswith(".pdf"):
-                        st.pdf(b, height=600)
-                    elif file_pilih.lower().endswith(".docx"):
-                        try:
-                            pdf_bytes = docx_bytes_to_pdf_bytes(b)
-                            st.pdf(pdf_bytes, height=600)
-                        except Exception as e:
-                            st.error(f"Gagal convert DOCX ke PDF: {e}")
-                    else:
-                        st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
+                colB, colC = st.columns([2, 1])
+                with colsB:
+                    with st.spinner("Menyiapkan preview dokumen..."):
+                        if file_pilih.lower().endswith(".pdf"):
+                            st.pdf(b, height=600)
+                        elif file_pilih.lower().endswith(".docx"):
+                            cached_pdf = st.session_state.pdf_cache_by_name.get(file_pilih)
+                            if cached_pdf is None:
+                                try:
+                                    pdf_bytes = docx_bytes_to_pdf_bytes(b)
+                                    st.session_state.pdf_cache_by_name[file_pilih] = pdf_bytes
+                                    cached_pdf = pdf_bytes
+                                except Exception as e:
+                                    st.error(f"Gagal convert DOCX ke PDF: {e}")
+                                    cached_pdf = None
+                            if cached_pdf is not None:
+                                st.pdf(cached_pdf, height=600)
+                        else:
+                            st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
         
         st.markdown("**Temuan per file**")
         if "file" in df_view.columns and len(df_view) > 0:
