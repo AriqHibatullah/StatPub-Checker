@@ -33,7 +33,7 @@ from spellchecker.settings import Settings
 # =========================
 # Streamlit config
 # =========================
-st.set_page_config(page_title="StatPub Checker Beta", layout="wide")
+st.set_page_config(page_title="StatPub Checker", layout="wide")
 st.markdown("""
     <style>
     header[data-testid="stHeader"] {
@@ -71,7 +71,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 with st.sidebar:
-    st.title("📊 StatPub Checker Beta 📃")
+    st.title("🔮 StatPub Checker 📃")
     st.caption("Lihat demo Web App StatPub Checker [di sini](https://docs.streamlit.io).")
     with st.expander("📘 Cara penggunaan"):
         st.markdown("""
@@ -453,12 +453,14 @@ if st.session_state.report_ready and st.session_state.df is not None:
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Total temuan", int(len(df_view)))
     c2.metric("Jumlah file", int(df_view["file"].nunique()) if "file" in df_view.columns else 0)
-    c3.metric("Jumlah halaman (unik)", int(df_view["page"].nunique()) if "page" in df_view.columns else 0)
-    try:
-        avg_conf1 = pd.to_numeric(df_view["confidence_1"], errors="coerce").mean()
-        c4.metric("Rata-rata conf Top-1", f"{avg_conf1:.2f}" if pd.notna(avg_conf1) else "-")
-    except Exception:
-        c4.metric("Rata-rata conf Top-1", "-")
+    
+    TOTAL_TYPO_LABEL = {"🔴 Kesalahan penulisan", "🟡 Kesalahan spasi"}
+    total_typo = int(df_view["status"].isin(TOTAL_TYPO_LABEL).sum()) if "status" in df_view.columns else 0
+    c3.metric("Total kesalahan penulisan", total_typo)
+
+    UNKNOWN_LABELS = {"⚪ Kata tidak dikenali", "⚪ Singkatan tidak dikenali"}
+    total_unknown = int(df_view["status"].isin(UNKNOWN_LABELS).sum()) if "status" in df_view.columns else 0
+    c4.metric("Total tidak dikenali", total_unknown)
 
     tab3, tab1, tab2 = st.tabs(["Preview Detail", "Ringkasan", "Per File"])
 
@@ -885,6 +887,6 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
 
 st.markdown("---")
 st.caption(
-    "Catatan: Beta ini memakai kamus & model yang masih dikembangkan. "
+    "Catatan: Produk ini memakai kamus & model yang masih dikembangkan. "
     "Data akan selalu diupdate untuk memaksimalkan performa."
 )
