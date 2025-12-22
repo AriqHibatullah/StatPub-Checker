@@ -508,7 +508,7 @@ if st.session_state.report_ready and st.session_state.df is not None:
             if b is None:
                 st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
             else:
-                colB, colC = st.columns([2, 1])
+                colsB, colsC = st.columns([2, 1])
                 with colsB:
                     with st.spinner("Menyiapkan preview dokumen..."):
                         if file_pilih.lower().endswith(".pdf"):
