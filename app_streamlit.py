@@ -489,10 +489,10 @@ if st.session_state.report_ready and st.session_state.df is not None:
 
     with tab2:
         st.markdown("**Lihat preview dokumen**")
-        file_pilih = (
-            st.multiselect("Pilih file", sorted(df_view["file"].dropna().unique().tolist()))
-            if "file" in df_view.columns else []
-        )
+        file_pilih = None
+        if "file" in df_view.columns:
+            options = sorted(df_view["file"].dropna().astype(str).unique())
+            file_pilih = st.selectbox("Pilih file", options) if len(options) else None
 
         preview_btn = st.button("Tampilkan preview", type="secondary")
         if preview_btn:
