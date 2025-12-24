@@ -6,6 +6,7 @@ from copy import deepcopy
 from docx import Document
 from docx.enum.text import WD_COLOR_INDEX
 from docx.text.paragraph import Paragraph
+import pandas as pd
 
 def transfer_case(src: str, dst: str) -> str:
     if not src or not dst:
@@ -258,4 +259,5 @@ def locate_tokens_in_pdf_pages(pdf_bytes: bytes, tokens: list[str], *, min_len: 
 
     df = pd.DataFrame(rows, columns=["kata", "page", "hits"])
     return df
+
 
