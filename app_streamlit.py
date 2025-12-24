@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import re
 import uuid
+import fitz
 import zipfile
 import tempfile
 from docx import Document
@@ -26,7 +27,7 @@ MODEL_DIR = DATA_DIR / "models"
 from spellchecker.vocab.loaders import load_kbbi_words, load_txt_set
 from spellchecker.pipeline import run_on_file, build_vocabs
 from spellchecker.extractors.docx_extractor import docx_bytes_to_pdf_bytes
-from spellchecker.output.docx_highlighter import replace_and_highlight_docx_bytes, transfer_case, highlight_terms_docx_bytes
+from spellchecker.output.docx_highlighter import replace_and_highlight_docx_bytes, transfer_case, highlight_terms_docx_bytes, locate_tokens_in_pdf_pages
 from spellchecker.output.notifier_resend import send_dev_report_email
 from spellchecker.output.reporter import SupabaseConfig, upload_dev_run_report
 from spellchecker.settings import Settings
