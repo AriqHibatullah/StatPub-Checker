@@ -1,5 +1,5 @@
 from __future__ import annotations
-import io, re
+import io, re, fitz
 from typing import Dict, Iterable, Tuple, List
 from copy import deepcopy
 
@@ -258,3 +258,4 @@ def locate_tokens_in_pdf_pages(pdf_bytes: bytes, tokens: list[str], *, min_len: 
 
     df = pd.DataFrame(rows, columns=["kata", "page", "hits"])
     return df
+
