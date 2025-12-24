@@ -523,7 +523,7 @@ if st.session_state.report_ready and st.session_state.df is not None:
                                             df_pages.sort_values("page", ascending=True)[["kata", "page"]]
                                             .reset_index(drop=True)
                                         )
-                                        st.dataframe(df_pages, use_container_width=True, height=600)
+                                        st.dataframe(df_pages, use_container_width=True, height=500)
         
                         else:
                             st.error("Format file tidak didukung.")
