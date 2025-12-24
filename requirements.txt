@@ -5,3 +5,4 @@ pdfplumber
 Sastrawi
 supabase
 streamlit-pdf
+pymupdf
