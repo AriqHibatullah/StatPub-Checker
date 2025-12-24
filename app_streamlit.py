@@ -2,15 +2,12 @@ from __future__ import annotations
 
 import io
 import re
-import json
 import uuid
 import zipfile
 import tempfile
-import requests
 from docx import Document
 from pathlib import Path
 from typing import List, Dict, Any
-from supabase import create_client
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -27,8 +24,11 @@ WL_DIR = DATA_DIR / "whitelist"
 MODEL_DIR = DATA_DIR / "models"
 
 from spellchecker.vocab.loaders import load_kbbi_words, load_txt_set
-from spellchecker.extractors.docx_extractor import docx_bytes_to_pdf_bytes
 from spellchecker.pipeline import run_on_file, build_vocabs
+from spellchecker.extractors.docx_extractor import docx_bytes_to_pdf_bytes
+from spellchecker.output.docx_highlighter import replace_and_highlight_docx_bytes, transfer_case
+from spellchecker.output.notifier_resend import send_dev_report_email
+from spellchecker.output.reporter import SupabaseConfig, upload_dev_run_report
 from spellchecker.settings import Settings
 
 # =========================
@@ -311,90 +311,50 @@ def run_pipeline_on_paths(paths: List[str]) -> List[Any]:
     return all_findings
 
 def replace_in_docx_bytes(docx_bytes: bytes, replacements: dict[str, str]) -> bytes:
-    doc = Document(io.BytesIO(docx_bytes))
-
-    # sort by length desc biar token panjang menang dulu (mengurangi partial replace)
-    keys = sorted([k for k in replacements.keys() if k], key=len, reverse=True)
-    if not keys:
+    items = [(k, v) for k, v in replacements.items() if k and v and k != v]
+    if not items:
         return docx_bytes
 
-    pattern = re.compile("|".join(re.escape(k) for k in keys))
+    items.sort(key=lambda kv: len(kv[0]), reverse=True)
 
-    def sub_func(m):
-        return replacements.get(m.group(0), m.group(0))
+    pattern = re.compile(r"\b(" + "|".join(re.escape(k) for k, _ in items) + r")\b", re.IGNORECASE)
+    repl_lower = {k.lower(): v for k, v in items}
 
-    def repl_in_paragraph(p):
-        for run in p.runs:
-            t = run.text
-            if t:
-                run.text = pattern.sub(sub_func, t)
+    def sub_func(m: re.Match) -> str:
+        found = m.group(0)
+        new = repl_lower.get(found.lower())
+        if not new:
+            return found
+        return transfer_case(found, new)
+
+    doc = Document(io.BytesIO(docx_bytes))
+
+    def repl_paragraph(p) -> None:
+        full = "".join(r.text or "" for r in p.runs)
+        if not full:
+            return
+
+        new_full = pattern.sub(sub_func, full)
+        if new_full == full:
+            return
+
+        for r in list(p.runs):
+            r._r.getparent().remove(r._r)
+
+        p.add_run(new_full)
 
     for p in doc.paragraphs:
-        repl_in_paragraph(p)
+        repl_paragraph(p)
+
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
                 for p in cell.paragraphs:
-                    repl_in_paragraph(p)
+                    repl_paragraph(p)
 
     out = io.BytesIO()
     doc.save(out)
     return out.getvalue()
-
-def send_email_resend(
-    to_email: str,
-    subject: str,
-    html: str,
-    from_email: str | None = None,
-    api_key: str | None = None,
-    timeout_s: int = 20,
-):
-    api_key = api_key or st.secrets.get("RESEND_API_KEY")
-    if not api_key:
-        raise ValueError("RESEND_API_KEY tidak ditemukan di st.secrets")
-
-    from_email = from_email or st.secrets.get("EMAIL_FROM")
-    if not from_email:
-        raise ValueError("EMAIL_FROM tidak ditemukan di st.secrets (mis: 'StatPub Checker <no-reply@domainmu.com>')")
-
-    payload = {
-        "from": from_email,
-        "to": [to_email],
-        "subject": subject,
-        "html": html,
-    }
-
-    r = requests.post(
-        "https://api.resend.com/emails",
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-        json=payload,
-        timeout=timeout_s,
-    )
-
-    if r.status_code >= 400:
-        raise RuntimeError(f"Resend error {r.status_code}: {r.text}")
-
-    return r.json()
-    
-def upload_to_supabase(bucket: str, path: str, content: bytes, content_type: str = "text/csv", upsert: bool = True):
-    supabase = create_client(
-        st.secrets["URL"],
-        st.secrets["ROLE_KEY"],
-    )
-
-    file_options = {
-        "content-type": content_type,
-        "x-upsert": "true" if upsert else "false",
-    }
-
-    supabase.storage.from_(bucket).upload(
-        path,
-        content,
-        file_options=file_options,
-    )
 
 if run_btn:
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -735,6 +695,8 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
 
     st.markdown("---")
     st.caption("Setelah review selesai, klik Perbaiki typo untuk membuat output berdasarkan pilihanmu.")
+
+    highlight_out = st.checkbox("Sertakan highlight pada draft hasil", value=True, key="highlight_out")
     fix_btn = st.button("Perbaiki typo", type="secondary")
 
     if fix_btn:
@@ -798,7 +760,16 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
                             repl[old] = new
 
                     if fname.lower().endswith(".docx"):
-                        revised = replace_in_docx_bytes(src_bytes, repl)
+                        if highlight_out:
+                            revised = replace_and_highlight_docx_bytes(
+                                src_bytes,
+                                repl,
+                                case_insensitive=True,
+                                whole_word=True,
+                            )
+                        else:
+                            revised = replace_in_docx_bytes(src_bytes, repl)
+
                         z.writestr(f"revisi_{fname}", revised)
                     else:
                         z.writestr(
@@ -817,114 +788,64 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
                 mime="application/zip",
             )
 
-            try:
-                df_raw_dev = st.session_state.get("df_raw_dev")
-                if df_raw_dev is None:
-                    df_raw_dev = df_all.copy()
+        # try:
+        #     df_raw_dev = st.session_state.get("df_raw_dev")
+        #     if df_raw_dev is None:
+        #         df_raw_dev = df_all.copy()
 
-                df_eval_full = df_all.copy()
-                
-                abbr_confirmed_count = 0
-                if "status" in df_eval_full.columns:
-                    abbr_confirmed_count = int((df_eval_full["status"] == "abbr_confirmed").sum())
+        #     df_eval_full = df_all.copy()
 
-                replaced = int((df_eval_full["action"] == "replaced").sum())
-                ignored  = int((df_eval_full["action"] == "ignored").sum())
-                total    = int(len(df_eval_full))
-                
-                den = replaced + ignored
-                acceptance_rate = (replaced / den) if den > 0 else None
+        #     meta = {
+        #         "run_id": run_id,
+        #         "ts_utc": ts_utc,
+        #         "files": sorted(list(st.session_state.get("upload_bytes_by_name", {}).keys())),
+        #         "config": {
+        #             "topk": int(topk),
+        #             "max_findings": int(max_findings),
+        #             "show_only_top1_if_conf_ge": float(show_only_top1_if_conf_ge),
+        #         },
+        #         "summary": {
+        #             "total_findings": int(len(df_eval_full)),
+        #             "replaced": int((df_eval_full["action"] == "replaced").sum()) if "action" in df_eval_full.columns else None,
+        #             "ignored": int((df_eval_full["action"] == "ignored").sum()) if "action" in df_eval_full.columns else None,
+        #         },
+        #         "user_vocab": st.session_state.get("user_vocab", []),
+        #         "user_vocab_count": len(st.session_state.get("user_vocab", [])),
+        #         "app_version": "0.2.0",
+        #     }
 
-                custom_used = int(((df_eval_full["action"] == "replaced") & (df_eval_full["fix_custom"].astype(str).str.strip().str.len() > 0)).sum()) if "fix_custom" in df_eval_full.columns else None
-                custom_rate = (custom_used / replaced) if (custom_used is not None and replaced > 0) else None
+        #     bucket = "dev-reports"
+        #     base_path = f"{date_str}/{run_id}"
 
-                non_top1_count = 0
-                if replaced > 0:
-                    non_top1_count = int((
-                        (df_eval_full["action"] == "replaced") &
-                        (
-                            (df_eval_full["fix_choice"].isin(["suggestion_2", "suggestion_3", "custom"])) |
-                            (df_eval_full["fix_custom"].astype(str).str.strip().str.len() > 0)
-                        )
-                    ).sum())
-                
-                non_top1_rate = (non_top1_count / replaced) if replaced > 0 else None
+        #     cfg_sb = SupabaseConfig(
+        #         url=st.secrets["SUPABASE_URL"],
+        #         service_role_key=st.secrets["SUPABASE_SERVICE_ROLE_KEY"],
+        #     )
 
-                meta = {
-                    "run_id": run_id,
-                    "ts_utc": ts_utc,
-                    "files": sorted(list(st.session_state.get("upload_bytes_by_name", {}).keys())),
-                    "config": {
-                        "tipe_dokumen": tipe_publikasi,
-                        "max_findings": int(max_findings),
-                        "show_only_top1_if_conf_ge": float(show_only_top1_if_conf_ge),
-                    },
-                    "summary": {
-                        "total_findings": int(len(df_eval_full)),
-                        "replaced": int((df_eval_full["action"] == "replaced").sum()) if "action" in df_eval_full.columns else None,
-                        "ignored": int((df_eval_full["action"] == "ignored").sum()) if "action" in df_eval_full.columns else None,
-                        "non_top1_count": non_top1_count,
-                        "abbr_confirmed": abbr_confirmed_count,
-                    },
-                    "accuracy": {
-                        "precision_proxy": acceptance_rate,
-                        "custom_rate": custom_rate,
-                        "non_top1_rate": non_top1_rate,
-                    },
-                    "user_vocab": st.session_state.get("user_vocab", []),
-                    "user_vocab_count": len(st.session_state.get("user_vocab", [])),
-                    "app_version": "0.2.0",
-                }
+        #     uv = "\n".join(st.session_state.get("user_vocab", [])) + "\n"
 
-                bucket = "dev-reports"
-                base_path = f"{date_str}/{run_id}"
+        #     upload_dev_run_report(
+        #         cfg=cfg_sb,
+        #         bucket=bucket,
+        #         base_path=base_path,
+        #         raw_findings_csv=df_raw_dev.to_csv(index=False).encode("utf-8"),
+        #         eval_full_csv=df_eval_full.to_csv(index=False).encode("utf-8"),
+        #         meta=meta,
+        #         user_vocab_txt=uv.encode("utf-8"),
+        #     )
 
-                upload_to_supabase(
-                    bucket=bucket,
-                    path=f"{base_path}/raw_findings.csv",
-                    content=df_raw_dev.to_csv(index=False).encode("utf-8"),
-                    content_type="text/csv",
-                )
+        #     try:
+        #         send_dev_report_email(
+        #             secrets=st.secrets,
+        #             run_id=run_id,
+        #             base_path=base_path,
+        #             total_findings=len(df_eval_full),
+        #         )
+        #     except Exception as e:
+        #         st.warning(f"(Dev) Email notif gagal: {e}")
 
-                upload_to_supabase(
-                    bucket=bucket,
-                    path=f"{base_path}/eval_full.csv",
-                    content=df_eval_full.to_csv(index=False).encode("utf-8"),
-                    content_type="text/csv",
-                )
-
-                upload_to_supabase(
-                    bucket=bucket,
-                    path=f"{base_path}/meta.json",
-                    content=json.dumps(meta, ensure_ascii=False, indent=2).encode("utf-8"),
-                    content_type="application/json",
-                )
-
-                uv = "\n".join(st.session_state.get("user_vocab", [])) + "\n"
-                upload_to_supabase(
-                    bucket=bucket,
-                    path=f"{base_path}/user_vocab.txt",
-                    content=uv.encode("utf-8"),
-                    content_type="text/plain",
-                )
-
-                try:
-                    to_email = st.secrets.get("EMAIL_TO", "ISI_SENDIRI@gmail.com")
-                    subject = f"[StatPub Checker] Dev report masuk — run_id: {run_id}"
-                    html = f"""
-                      <h3>Dev report baru masuk</h3>
-                      <ul>
-                        <li><b>run_id</b>: {run_id}</li>
-                        <li><b>base_path</b>: {base_path}</li>
-                        <li><b>total_findings</b>: {len(df_eval_full)}</li>
-                      </ul>
-                    """
-                    send_email_resend(to_email=to_email, subject=subject, html=html)
-                except Exception as e:
-                    st.warning(f"(Dev) Email notif gagal: {e}")
-
-            except Exception as e:
-                st.warning(f"(Dev) Upload report gagal: {e}")
+        # except Exception as e:
+        #     st.warning(f"(Dev) Upload report gagal: {e}")
 
 st.markdown("---")
 st.caption(
