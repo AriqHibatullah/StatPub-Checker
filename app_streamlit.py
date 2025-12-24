@@ -519,7 +519,10 @@ if st.session_state.report_ready and st.session_state.df is not None:
                                     if df_pages.empty:
                                         st.info("Tidak ada match ditemukan (PDF hasil konversi tidak punya text layer yang terdeteksi).")
                                     else:
-                                        df_pages = df_pages.sort_values(["kata", "page"])
+                                        df_pages = (
+                                            df_pages.sort_values("page", ascending=True)[["kata", "page"]]
+                                            .reset_index(drop=True)
+                                        )
                                         st.dataframe(df_pages, use_container_width=True, height=600)
         
                         else:
