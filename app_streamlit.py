@@ -103,6 +103,16 @@ st.caption("Upload DOCX/PDF → sistem menghasilkan temuan typo + saran koreksi.
 # =========================
 # Resource loading (cached)
 # =========================
+def ensure_session_state():
+    defaults = {
+        "preview_show": False,
+        "preview_file": None,
+    }
+
+    for k, v in defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
+
 @st.cache_resource
 def load_resources():
     kbbi = load_kbbi_words(DICT_DIR / "kbbi.csv")
@@ -149,6 +159,7 @@ def load_resources():
         protected_name_tokens=protected_name_tokens,
     )
 
+ensure_session_state()
 resources = load_resources()
 
 # =========================
@@ -395,6 +406,10 @@ if run_btn:
         st.session_state.review_mode = False
         st.session_state.csv_ready = False
 
+def _do_preview():
+    st.session_state.preview_show = True
+    st.session_state.preview_file = file_pilih
+
 if st.session_state.report_ready and st.session_state.df is not None:
     df_raw = st.session_state.df
 
@@ -461,9 +476,10 @@ if st.session_state.report_ready and st.session_state.df is not None:
             if file_pilih == "— Pilih file —":
                 file_pilih = None
 
-        preview_btn = st.button("Tampilkan preview", type="secondary")
-        if preview_btn and file_pilih:
-            b = st.session_state.upload_bytes_by_name.get(file_pilih)
+        preview_btn = st.button("Tampilkan preview", type="secondary", on_click=_do_preview)
+        if st.session_state.preview_show and st.session_state.preview_file:
+            file_to_render = st.session_state.preview_file
+            b = st.session_state.upload_bytes_by_name.get(file_to_render)
 
             if b is None:
                 st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
