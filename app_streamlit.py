@@ -3,7 +3,6 @@ from __future__ import annotations
 import io
 import re
 import uuid
-import fitz
 import zipfile
 import tempfile
 from docx import Document
