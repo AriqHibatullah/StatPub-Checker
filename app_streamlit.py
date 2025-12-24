@@ -26,7 +26,7 @@ MODEL_DIR = DATA_DIR / "models"
 from spellchecker.vocab.loaders import load_kbbi_words, load_txt_set
 from spellchecker.pipeline import run_on_file, build_vocabs
 from spellchecker.extractors.docx_extractor import docx_bytes_to_pdf_bytes
-from spellchecker.output.docx_highlighter import replace_and_highlight_docx_bytes, transfer_case
+from spellchecker.output.docx_highlighter import replace_and_highlight_docx_bytes, transfer_case, highlight_terms_docx_bytes
 from spellchecker.output.notifier_resend import send_dev_report_email
 from spellchecker.output.reporter import SupabaseConfig, upload_dev_run_report
 from spellchecker.settings import Settings
@@ -469,24 +469,61 @@ if st.session_state.report_ready and st.session_state.df is not None:
                 st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
             else:
                 colsB, colsC = st.columns([2, 1])
+
+                df_file = df_view[df_view["file"].astype(str) == str(file_pilih)]
+                tokens_file = df_file["token"].dropna().astype(str).tolist()
+        
                 with colsB:
                     with st.spinner("Menyiapkan preview dokumen..."):
                         if file_pilih.lower().endswith(".pdf"):
                             st.pdf(b, height=600)
+
+                            with colsC:
+                                st.markdown("**Kata temuan**")
+                                df_pages = locate_tokens_in_pdf_pages(b, tokens_file)
+                                if df_pages.empty:
+                                    st.info("Tidak ada match ditemukan (mungkin PDF scan / tidak ada text layer).")
+                                else:
+                                    df_pages = df_pages.sort_values(["kata", "page"])
+                                    st.dataframe(df_pages, use_container_width=True, height=600)
+                                    
                         elif file_pilih.lower().endswith(".docx"):
+                            try:
+                                docx_hl = highlight_terms_docx_bytes(
+                                    b,
+                                    tokens_file,
+                                    case_insensitive=True,
+                                    whole_word=True,
+                                )
+                            except Exception as e:
+                                st.error(f"Gagal highlight DOCX: {e}")
+                                docx_hl = b
+
                             cached_pdf = st.session_state.pdf_cache_by_name.get(file_pilih)
                             if cached_pdf is None:
                                 try:
-                                    pdf_bytes = docx_bytes_to_pdf_bytes(b)
+                                    pdf_bytes = docx_bytes_to_pdf_bytes(docx_hl)
                                     st.session_state.pdf_cache_by_name[file_pilih] = pdf_bytes
                                     cached_pdf = pdf_bytes
                                 except Exception as e:
                                     st.error(f"Gagal convert DOCX ke PDF: {e}")
+                                    pdf_bytes = None
                                     cached_pdf = None
+        
                             if cached_pdf is not None:
                                 st.pdf(cached_pdf, height=600)
+        
+                                with colsC:
+                                    st.markdown("**Kata temuan**")
+                                    df_pages = locate_tokens_in_pdf_pages(cached_pdf, tokens_file)
+                                    if df_pages.empty:
+                                        st.info("Tidak ada match ditemukan (PDF hasil konversi tidak punya text layer yang terdeteksi).")
+                                    else:
+                                        df_pages = df_pages.sort_values(["kata", "page"])
+                                        st.dataframe(df_pages, use_container_width=True, height=600)
+        
                         else:
-                            st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
+                            st.error("Format file tidak didukung.")
         
         st.markdown("**Temuan per file**")
         if "file" in df_view.columns and len(df_view) > 0:
