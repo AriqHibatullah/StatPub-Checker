@@ -25,7 +25,7 @@ Tonton video demonstrasinya disini:
 - **NLP Resource:** KBBI, Kamus Indonesia & Inggris, Domain-specific vocabulary, Protected phrases & names
 
 ## 🚧 Status Proyek
-Versi: 0.2.0
+Versi: 0.3.0
 Status: Minimum Viable Product (MVP)
 
 ## 👤 Authors
@@ -34,8 +34,13 @@ Project ini dikembangkan oleh:
 - Firdaini Azmi - S1 Sains Data
 
 ## 🆕 Update Log
+### 🔸 v0.3.0 - 24 Desember 2025
+- Menambahkan fitur highlight kata pada hasil konversi
+- Menambahkan fitur preview dokumen untuk membantu proses review pengguna
+- Mengoptimalkan sistem konversi dokumen
+
 ### 🔹 21 Desember 2025
-- Manual Book penggunaan Aplikasi Web StatPub Checker telah rilis!
+- Manual Book penggunaan Aplikasi Web StatPub Checker v0.2 telah rilis!
 
 ### 🔸 v0.2.1 – 20 Desember 2025
 - Menambahkan input Tipe publikasi untuk pengguna
