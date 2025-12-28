@@ -50,6 +50,7 @@ def build_vocabs(
 def run_on_file(
     path: str,
     cfg: Settings,
+    eng: Any,
     known_vocab: Set[str],
     english_vocab: Set[str],
     known_vocab_for_names: Set[str],
@@ -59,7 +60,6 @@ def run_on_file(
     protected_name_tokens: Set[str],
 ) -> Tuple[List[Finding], Dict[str, Any]]:
     base = os.path.basename(path)
-    eng = build_engine(resources, models)
     stemmer = StemmerFactory().create_stemmer()
 
     findings: List[Finding] = []
@@ -92,7 +92,6 @@ def run_on_file(
             if is_crew:
                 page_text = drop_name_degree_lines(page_text)
 
-            # NOTE: keep it simple here; you can port your full "filtered_lines" logic if needed
             for line in (page_text or "").splitlines():
                 line = (line or "").strip()
                 if not line:
