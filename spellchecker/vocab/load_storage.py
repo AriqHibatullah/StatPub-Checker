@@ -23,8 +23,8 @@ def _sb_cfg() -> SBStorageCfg:
     return SBStorageCfg(
         url=st.secrets["URL"],
         service_role_key=st.secrets["ROLE_KEY"],
-        bucket=st.secrets.get("DATA_BUCKET"),
-        manifest_path=st.secrets.get("MANIFEST_PATH"),
+        bucket=st.secrets.get("DATA_BUCKET", "data"),
+        manifest_path=st.secrets.get("MANIFEST_PATH", "manifest.json"),
     )
 
 
@@ -70,3 +70,4 @@ def download_to_tempfile(path: str, suffix: str, version: str) -> Path:
     tmp.flush()
     tmp.close()
     return Path(tmp.name)
+
