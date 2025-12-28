@@ -248,7 +248,7 @@ def parse_id_ranges(text: str) -> set[int]:
                 ids.add(int(part))
     return ids
 
-def run_pipeline_on_paths(paths: List[str], resources: dict, user_vocab: set, cfg: Settings) -> List[Any]:
+def run_pipeline_on_paths(paths: List[str], resources: dict, user_vocab: set) -> List[Any]:
     cfg = Settings(
         topk=int(3),
         max_findings_per_file=int(max_findings),
@@ -339,7 +339,7 @@ if run_btn:
         st.info(f"Memproses {len(saved_paths)} file…")
 
         with st.spinner("Running spellcheck…"):
-            findings = run_pipeline_on_paths(saved_paths, resources, set(user_vocab or []), cfg)
+            findings = run_pipeline_on_paths(saved_paths, resources, set(user_vocab or []))
 
         df = findings_to_dataframe(findings)
 
