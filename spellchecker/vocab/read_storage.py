@@ -23,13 +23,22 @@ def create_signed_url(
     )
     r.raise_for_status()
     data = r.json()
-   
+
     signed_path = data.get("signedURL") or data.get("signedUrl") or data.get("signed_url")
     if not signed_path:
-        raise RuntimeError(f"Signed URL missing in response: {data}")
+        raise RuntimeError(f"signedURL missing: {data}")
+
     if signed_path.startswith("http"):
         return signed_path
-    return f"{supabase_url.rstrip('/')}{signed_path}"
+
+    base = supabase_url.rstrip("/")
+    if signed_path.startswith("/storage/v1/"):
+        return base + signed_path
+
+    if signed_path.startswith("/object/"):
+        return base + "/storage/v1" + signed_path
+
+    return base + "/storage/v1/" + signed_path.lstrip("/")
 
 def download_private_bytes(
     *,
@@ -50,4 +59,5 @@ def download_private_bytes(
     r = requests.get(signed_url, timeout=60)
     r.raise_for_status()
     return r.content
+
 
