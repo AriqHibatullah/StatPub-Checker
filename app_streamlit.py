@@ -849,7 +849,7 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
                 "ts_utc": ts_utc,
                 "files": sorted(list(st.session_state.get("upload_bytes_by_name", {}).keys())),
                 "config": {
-                    "topk": int(topk),
+                    "topk": int(3),
                     "max_findings": int(max_findings),
                     "show_only_top1_if_conf_ge": float(show_only_top1_if_conf_ge),
                 },
@@ -860,15 +860,15 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
                 },
                 "user_vocab": st.session_state.get("user_vocab", []),
                 "user_vocab_count": len(st.session_state.get("user_vocab", [])),
-                "app_version": "0.2.0",
+                "app_version": "0.4.1",
             }
 
             bucket = "dev-reports"
             base_path = f"{date_str}/{run_id}"
 
             cfg_sb = SupabaseConfig(
-                url=st.secrets["SUPABASE_URL"],
-                service_role_key=st.secrets["SUPABASE_SERVICE_ROLE_KEY"],
+                url=st.secrets["URL"],
+                service_role_key=st.secrets["ROLE_KEY"],
             )
 
             uv = "\n".join(st.session_state.get("user_vocab", [])) + "\n"
