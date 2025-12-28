@@ -106,7 +106,8 @@ st.caption("Upload DOCX/PDF → sistem menghasilkan temuan typo + saran koreksi.
 # =========================
 ensure_session_state()
 data_storage = st.secrets["STORAGE"]
-resources = load_resources_from_storage(bucket=data_storage)
+ver = load_storage_version(data_storage)
+resources = load_resources_from_storage_versioned(bucket=data_storage, version=ver)
 EDITOR_KEY = "tabel_seleksi"
 
 # =========================
