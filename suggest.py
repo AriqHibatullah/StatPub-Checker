@@ -14,6 +14,37 @@ MAX_EDIT = 2
 TOPK = 5
 PREFIX_LEN = 7
 INDEX_PKL = "models/symspell_id.pkl"
+
+# =========================
+# Loaders
+# =========================
+
+def load_txt_set(path: str) -> Set[str]:
+    if not path or not os.path.exists(path):
+        return set()
+    out = set()
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            w = line.strip().lower()
+            if w and not w.startswith("#"):
+                out.add(w)
+    return out
+
+def load_json(path: str) -> Any:
+    if not os.path.exists(path):
+        return {}
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+def load_unigram_freq(path: str) -> Dict[str, int]:
+    data = load_json(path)
+    if isinstance(data, dict) and "freq" in data and isinstance(data["freq"], dict):
+        # meta format
+        return {k: int(v) for k, v in data["freq"].items()}
+    if isinstance(data, dict):
+        # simple format
+        return {k: int(v) for k, v in data.items()}
+    return {}
     
 # =========================
 # Normalization & basic skip
@@ -235,6 +266,7 @@ class SuggestEngine:
 
         status = "no_candidates" if not ranked else "symspell"
         return {"token": raw, "normalized": tok, "status": status, "suggestions": ranked}
+
 
 
 
