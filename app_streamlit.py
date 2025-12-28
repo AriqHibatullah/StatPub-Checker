@@ -78,10 +78,10 @@ st.markdown("""
         background: #fafcfa !important;
     }
     section[data-testid="stSidebar"] {
-        width: 320px !important;
+        width: 310px !important;
     }
     section[data-testid="stSidebar"] > div {
-        width: 320px !important;
+        width: 310px !important;
     }
     </style>
 """, unsafe_allow_html=True)
