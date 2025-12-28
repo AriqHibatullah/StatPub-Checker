@@ -1,8 +1,9 @@
 from __future__ import annotations
 from typing import Iterable, Tuple
 from docx import Document
-from pathlib import Path
-import os, tempfile, subprocess
+from docx2pdf import convert
+import tempfile
+import os
 
 def iter_docx_paragraph_texts(path: str) -> Iterable[str]:
     doc = Document(path)
@@ -10,25 +11,16 @@ def iter_docx_paragraph_texts(path: str) -> Iterable[str]:
         if p.text:
             yield p.text
 
-def docx_bytes_to_pdf_bytes(docx_bytes: bytes) -> bytes:
+def docx_to_pdf_bytes(uploaded_docx):
     with tempfile.TemporaryDirectory() as tmpdir:
-        tmpdir = Path(tmpdir)
-        docx_path = tmpdir / "input.docx"
-        docx_path.write_bytes(docx_bytes)
+        docx_path = os.path.join(tmpdir, "input.docx")
+        pdf_path = os.path.join(tmpdir, "output.pdf")
 
-        subprocess.run(
-            ["soffice", "--headless", "--nologo", "--nofirststartwizard",
-             "--convert-to", "pdf", "--outdir", str(tmpdir), str(docx_path)],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        with open(docx_path, "wb") as f:
+            f.write(uploaded_docx.getvalue())
 
-        pdf_path = tmpdir / "input.pdf"
-        if not pdf_path.exists():
-            pdfs = list(tmpdir.glob("*.pdf"))
-            if not pdfs:
-                raise RuntimeError("LibreOffice tidak menghasilkan PDF.")
-            pdf_path = pdfs[0]
+        convert(docx_path, pdf_path)
+        with open(pdf_path, "rb") as f:
+            pdf_bytes = f.read()
 
-        return pdf_path.read_bytes()
+    return pdf_bytes

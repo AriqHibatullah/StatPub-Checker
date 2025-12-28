@@ -12,10 +12,11 @@ from spellchecker.types import Finding
 from spellchecker.engine.suggest_wrapper import build_engine, suggest as suggest_call
 from spellchecker.extractors.pdf_extractor import iter_pdf_pages_raw
 
-from spellchecker.rules.text import tokenize_with_context, tokenize_docx_paragraph_with_context, normalize_math_text
+from spellchecker.rules.text import tokenize_with_context, tokenize_docx_paragraph_with_context, normalize_math_text, normalize_text_keep_case
 from spellchecker.rules.skip import should_skip_token, is_valid_reduplication, RE_DEGREE_TOKEN
 from spellchecker.rules.abbr import paren_abbrev_from_snippet, is_probable_paren_abbrev, is_acronym_like_pdf, is_acronym_like_orig
 from spellchecker.rules.citation import should_skip_as_citation_name_pdf, protect_citation_spans_docx
+from spellchecker.rules.capital import is_sentence_start_from_offset, is_capitalization_error
 from spellchecker.rules.docx_roles import is_role_header_paragraph, protect_name_run_in_paragraph
 from spellchecker.rules.names import protect_name_degree_spans
 from spellchecker.rules.hyphen import fix_hyphenation_block_with_vocab, protect_hyphen_join_spans_docx, HYPHENS
@@ -26,10 +27,11 @@ from spellchecker.rules.lang import looks_englishish
 from spellchecker.rules.inflection import is_probably_valid_inflection
 from spellchecker.rules.glossary import is_doc_term_candidate, is_strong_typo_from_suggestions
 from spellchecker.rules.context_skip import should_skip_address_token, should_skip_paren_author_verb, should_skip_author_year
+from spellchecker.morph.space_nya import detect_space_error_nya
 from spellchecker.morph.affix import (
     maybe_affixed_id, cached_stem, deaffix_for_suggest,
     pick_best_suggest_query_for_nya, reaffix_suggestion,
-    top1_conf, is_synth_top, top_term
+    top1_conf, is_synth_top, top_term, apply_luluh_candidates
 )
 
 def build_vocabs(
@@ -261,7 +263,6 @@ def run_on_file(
             if is_bibliography_citation_line(text):
                 continue
 
-            # Fix hyphenation based on vocab
             fixed_text = fix_hyphenation_block_with_vocab(p.text or "", known_vocab_for_names)
 
             triples = tokenize_docx_paragraph_with_context(fixed_text)
@@ -270,6 +271,7 @@ def run_on_file(
 
             toks_norm = [t[0] for t in triples]
             toks_orig = [t[1] for t in triples]
+            raw_para = normalize_text_keep_case(text)
 
             skip_first = False
             if carry is not None:
@@ -322,11 +324,28 @@ def run_on_file(
             if skip_first:
                 protected_idx.add(0)
 
-            for idx, (tok, tok_orig, snippet, snippet_raw) in enumerate(triples):
+            for idx, (tok, tok_orig, snippet, snippet_raw, t_start, t_end) in enumerate(triples):
                 if idx in protected_idx:
                     continue
                 if tok in doc_symbols:
                     continue
+                
+                nya_info = detect_space_error_nya(triples, idx)
+                if nya_info is not None:
+                    join_term = nya_info["join_term"]
+                    findings.append(Finding(
+                        file=base,
+                        page=page_label,
+                        token=tok,
+                        snippet=snippet,
+                        status="space_error",
+                        suggestions=[{"term": join_term, "confidence": 1.0}],
+                    ))
+                    count_file += 1
+                    if count_file >= cfg.max_findings_per_file:
+                        break
+                    continue
+
                 if hold_last_as_carry and idx == last_idx:
                     continue
 
@@ -345,6 +364,24 @@ def run_on_file(
                     continue
                 if tok in ignore_vocab:
                     continue
+
+                # capital
+                is_start = is_sentence_start_from_offset(raw_para, t_start)
+                if is_start and is_capitalization_error(tok_orig):
+                    sugg = tok_orig[:1].upper() + tok_orig[1:]
+                    findings.append(Finding(
+                        file=base,
+                        page=page_label,
+                        token=tok,
+                        snippet=snippet_raw,
+                        status="capital_error",
+                        suggestions=[{"term": sugg, "confidence": 1.0}],
+                    ))
+                    count_file += 1
+                    if count_file >= cfg.max_findings_per_file:
+                        break
+                    continue
+
                 if is_valid_reduplication(tok, known_vocab_for_names):
                     continue
                 if tok in known_vocab_for_names:
@@ -354,7 +391,7 @@ def run_on_file(
                 abbr_seen |= paren_abbrev_from_snippet(snippet_raw)
                 if is_probable_paren_abbrev(tok, snippet_raw):
                     if tok not in abbr_reported:
-                        findings.append(Finding(base, page_label, tok, snippet, "abbr_confirmed", []))
+                        findings.append(Finding(base, page_label, tok, snippet_raw, "abbr_confirmed", []))
                         abbr_reported.add(tok)
                         count_file += 1
                         if count_file >= cfg.max_findings_per_file:
@@ -362,11 +399,12 @@ def run_on_file(
                     continue
                 if tok in abbr_seen:
                     continue
+                
                 if is_acronym_like_orig(tok_orig) and tok not in abbr_seen:
                     if tok not in known_vocab and tok not in english_vocab and tok not in ignore_vocab:
                         abbr_candidate_count[tok] += 1
                         if abbr_candidate_count[tok] == cfg.abbr_cand_min_count:
-                            findings.append(Finding(base, page_label, tok, snippet, "abbr_candidate", []))
+                            findings.append(Finding(base, page_label, tok, snippet_raw, "abbr_candidate", []))
                             count_file += 1
                             if count_file >= cfg.max_findings_per_file:
                                 break
@@ -407,6 +445,29 @@ def run_on_file(
                         if stem == tok:
                             base_tok, info = deaffix_for_suggest(tok)
                             if base_tok != tok and len(base_tok) >= 3:
+                                cands = apply_luluh_candidates(base_tok, info.get("prefixes", []))
+
+                                picked = None
+                                for c in cands:
+                                    if c in known_vocab:
+                                        picked = c
+                                        break
+
+                                if picked is not None:
+                                    base_tok = picked
+                                else:
+                                    best = cands[0]
+                                    best_res = eng.suggest(best, topk=cfg.topk)
+                                    best_conf = top1_conf(best_res.get("suggestions", []))
+
+                                    for c in cands[1:]:
+                                        res = eng.suggest(c, topk=cfg.topk)
+                                        conf = top1_conf(res.get("suggestions", []))
+                                        if conf > best_conf:
+                                            best, best_res, best_conf = c, res, conf
+
+                                    base_tok = best
+
                                 suggest_query = base_tok
                                 affix_info = info
 
@@ -455,7 +516,6 @@ def run_on_file(
                             use_affix = False
 
                         if use_affix and is_synth_top(suggs):
-                            # synthetic top must land in known_vocab to be meaningful
                             top = (suggs[0].get("term") or suggs[0].get("suggestion") or "").lower()
                             if top and top not in known_vocab:
                                 use_affix = False

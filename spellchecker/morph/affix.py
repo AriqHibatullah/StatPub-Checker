@@ -125,8 +125,6 @@ def reaffix_suggestion(stem_candidate: str, info: Dict[str, Any]) -> str:
         out = p + out
     return out
 
-
-
 def sugss_get_word(d: Dict[str, Any]):
     return d.get("word")
 
@@ -137,3 +135,43 @@ def top_term(suggs: List[Dict[str, Any]]) -> str:
 
 def is_synth_top(suggs: List[Dict[str, Any]]) -> bool:
     return bool(suggs) and bool(suggs[0].get("_synthetic"))
+
+def apply_luluh_candidates(base: str, prefixes: list[str]) -> list[str]:
+    if not base:
+        return [base]
+    if not prefixes:
+        return [base]
+
+    p = prefixes[-1]
+    cands = [base]
+
+    if p in ("meny", "peny"):
+        cands.append("s" + base)
+
+    elif p in ("men", "pen"):
+        cands.append("t" + base)
+        cands.append("d" + base)
+        cands.append("j" + base)
+        cands.append("c" + base)
+
+    elif p in ("mem", "pem"):
+        cands.append("p" + base)
+        cands.append("b" + base)
+        cands.append("f" + base)
+        cands.append("v" + base)
+
+    elif p in ("meng", "peng"):
+        cands.append("k" + base)
+        cands.append("g" + base)
+        cands.append("h" + base)
+
+    out = []
+    seen = set()
+    for w in cands:
+        w = (w or "").strip()
+        if len(w) < 3:
+            continue
+        if w not in seen:
+            seen.add(w)
+            out.append(w)
+    return out or [base]
