@@ -8,7 +8,7 @@ except Exception as e:
     SuggestEngine = None
     _import_err = e
 
-def build_engine(resources: dict, models: dict | None = None):
+def build_engine(resources: Dict, models: Dict | None = None):
     if SuggestEngine is None:
         raise ImportError(f"SuggestEngine not found. Root error: {_import_err!r}")
     return SuggestEngine(
