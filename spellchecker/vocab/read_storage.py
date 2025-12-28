@@ -55,9 +55,9 @@ def download_private_bytes(
         path=path,
         expires_in=expires_in,
     )
-    print("SIGNED_URL:", signed_url)
     r = requests.get(signed_url, timeout=60)
     r.raise_for_status()
     return r.content
+
 
 
