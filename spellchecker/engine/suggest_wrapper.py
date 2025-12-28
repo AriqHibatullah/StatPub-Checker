@@ -1,15 +1,21 @@
 from __future__ import annotations
 from typing import Dict, Any, List, Optional
 
+_import_err = None
 try:
     from suggest import SuggestEngine 
 except Exception as e:
     SuggestEngine = None
+    _import_err = e
 
-def build_engine() -> Any:
+def build_engine(resources: dict, models: dict | None = None):
     if SuggestEngine is None:
-        raise ImportError("SuggestEngine not found. Make sure suggest.py is available in PYTHONPATH.")
-    return SuggestEngine(english_vocab=resources["english_vocab"], singkatan=resources["singkatan"], models=models)
+        raise ImportError(f"SuggestEngine not found. Root error: {_import_err!r}")
+    return SuggestEngine(
+        english_vocab=resources.get("english_vocab", set()),
+        singkatan=resources.get("singkatan", set()),
+        models=models,
+    )
 
 def normalize_suggestions(suggs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     out = []
