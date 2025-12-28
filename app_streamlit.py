@@ -8,7 +8,7 @@ import tempfile
 from docx import Document
 from pathlib import Path
 from typing import List, Dict, Any
-from datetime import datetime, timezone
+from datetime import datetime
 
 import pandas as pd
 import streamlit as st
@@ -25,16 +25,25 @@ MODEL_DIR = DATA_DIR / "models"
 
 from spellchecker.vocab.loaders import load_kbbi_words, load_txt_set
 from spellchecker.pipeline import run_on_file, build_vocabs
-from spellchecker.extractors.docx_extractor import docx_bytes_to_pdf_bytes
-from spellchecker.output.docx_highlighter import replace_and_highlight_docx_bytes, transfer_case, highlight_terms_docx_bytes, locate_tokens_in_pdf_pages
+from spellchecker.settings import Settings
+from spellchecker.vocab.load_storage import (
+    load_manifest,
+    load_txt_set_from_storage,
+    download_to_tempfile,
+)
+
+# from spellchecker.extractors.docx_extractor import docx_bytes_to_pdf_bytes
+from spellchecker.session.ensure import ensure_session_state, sync_uploaded_files_and_autoreset
+from spellchecker.output.docx_highlighter import replace_and_highlight_docx_bytes, transfer_case
+from spellchecker.session.review_helpers import apply_maps_to_df, commit_from_editor_state
+
 from spellchecker.output.notifier_resend import send_dev_report_email
 from spellchecker.output.reporter import SupabaseConfig, upload_dev_run_report
-from spellchecker.settings import Settings
 
 # =========================
 # Streamlit config
 # =========================
-st.set_page_config(page_title="StatPub Checker", layout="wide")
+st.set_page_config(page_title="StatPub Checker Beta", layout="wide")
 st.markdown("""
     <style>
     header[data-testid="stHeader"] {
@@ -68,15 +77,32 @@ st.markdown("""
     [data-testid="stSidebar"] {
         background: #fafcfa !important;
     }
+    [data-testid="stExpander"] [data-baseweb="select"] > div {
+        min-height: 32px !important;
+    }
+    [data-testid="stExpander"] input {
+        height: 32px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        font-size: 13px !important;
+    }
+    [data-testid="stExpander"] div[role="combobox"] {
+        font-size: 13px !important;
+    }
+    [data-testid="stExpander"] .stMarkdown, 
+    [data-testid="stExpander"] p {
+        font-size: 13px !important;
+        margin-bottom: 0.25rem !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
 with st.sidebar:
-    st.title("🔮 StatPub Checker 📃")
+    st.title("📊 StatPub Checker Beta 📃")
     st.caption("Lihat demo Web App StatPub Checker [di sini](https://docs.streamlit.io).")
     with st.expander("📘 Cara penggunaan"):
         st.markdown("""
-            Panduan lengkap bagaimana cara menggunakan StatPub Checker tersedia [di sini](https://drive.google.com/file/d/1fFY97-FEgeOVvuf18r_1Ckvz6hHMjwD2/view?usp=sharing).
+            Panduan lengkap bagaimana cara menggunakan StatPub Checker tersedia [di sini](https://docs.streamlit.io).
         """)
     with st.expander("ℹ️ Release Note Terbaru"):
         st.markdown("""
@@ -103,36 +129,43 @@ st.caption("Upload DOCX/PDF → sistem menghasilkan temuan typo + saran koreksi.
 # =========================
 # Resource loading (cached)
 # =========================
-def ensure_session_state():
-    defaults = {
-        "preview_show": False,
-        "preview_file": None,
-    }
-
-    for k, v in defaults.items():
-        if k not in st.session_state:
-            st.session_state[k] = v
-
 @st.cache_resource
 def load_resources():
-    kbbi = load_kbbi_words(DICT_DIR / "kbbi.csv")
-    kamus_id = load_txt_set(DICT_DIR / "kamus_indonesia.txt")
-    dictionary_en = load_txt_set(DICT_DIR / "dictionary_en.txt")
-    kamus_en = load_txt_set(DICT_DIR / "kamus_inggris.txt")
-    singkatan = load_txt_set(DICT_DIR / "singkatan.txt")
-    english_vocab = dictionary_en| kamus_en | singkatan
-    domain_terms = load_txt_set(DICT_DIR / "domain_terms.txt")
+    manifest = load_manifest()
+    ver = manifest["version"]
+    files = manifest["files"]
 
-    prov = load_txt_set(WL_DIR / "provinsi.txt") if (WL_DIR / "provinsi.txt").exists() else set()
-    kabkot = load_txt_set(WL_DIR / "kabupaten_kota.txt") if (WL_DIR / "kabupaten_kota.txt").exists() else set()
-    kec = load_txt_set(WL_DIR / "kecamatan_sda.txt") if (WL_DIR / "kecamatan_sda.txt").exists() else set()
-    negara = load_txt_set(WL_DIR / "negara.txt") if (WL_DIR / "negara.txt").exists() else set()
-    satuan = load_txt_set(WL_DIR / "satuan_unit.txt") if (WL_DIR / "satuan_unit.txt").exists() else set()
-    ignore_vocab = prov | kabkot | kec | negara | satuan
+    kbbi_path = download_to_tempfile(files["kbbi"], suffix=".csv", version=ver)
+    kbbi = load_kbbi_words(kbbi_path)
 
-    protected_phrases = load_txt_set(WL_DIR / "protected_phrases.txt") if (WL_DIR / "protected_phrases.txt").exists() else set()
+    kamus_id = load_txt_set_from_storage(files["kamus_indonesia"], ver)
 
-    protected_names_raw = load_txt_set(WL_DIR / "protected_names.txt") if (WL_DIR / "protected_names.txt").exists() else set()
+    dictionary_en = load_txt_set_from_storage(files["dictionary_en"], ver)
+    kamus_en = load_txt_set_from_storage(files["kamus_inggris"], ver)
+    singkatan = load_txt_set_from_storage(files["singkatan"], ver)
+    english_vocab = dictionary_en | kamus_en | singkatan
+
+    domain_terms = load_txt_set_from_storage(files["domain_terms"], ver)
+
+    protected_phrases = load_txt_set_from_storage(files["protected_phrase"], ver)
+    protected_names_raw = load_txt_set_from_storage(files["protected_names"], ver)
+
+    gelar_dan_sapaan = load_txt_set_from_storage(files["gelar_dan_sapaan"], ver)
+    instansi = load_txt_set_from_storage(files["instansi"], ver)
+    kode_dan_nomor = load_txt_set_from_storage(files["kode_dan_nomor"], ver)
+    nama_tempat = load_txt_set_from_storage(files["nama_tempat"], ver)
+    satuan_unit = load_txt_set_from_storage(files["satuan_unit"], ver)
+    sidoarjo_terms = load_txt_set_from_storage(files["sidoarjo_terms"], ver)
+
+    ignore_vocab = (
+        gelar_dan_sapaan
+        | instansi
+        | kode_dan_nomor
+        | nama_tempat
+        | satuan_unit
+        | sidoarjo_terms
+    )
+
     protected_name_tokens = set()
     for line in protected_names_raw:
         for w in line.split():
@@ -157,10 +190,12 @@ def load_resources():
         ignore_vocab=ignore_vocab,
         protected_phrases=protected_phrases,
         protected_name_tokens=protected_name_tokens,
+        manifest_version=ver,
     )
 
 ensure_session_state()
 resources = load_resources()
+EDITOR_KEY = "tabel_seleksi"
 
 # =========================
 # UI Controls
@@ -169,18 +204,20 @@ uploads = st.file_uploader(
         "Upload file DOCX/PDF, bisa upload banyak",
         type=["docx", "pdf"],
         accept_multiple_files=True,
+        key="uploader_files",
         help = "Untuk file pdf, disarankan agar file tidak mempunyai watermark untuk performa optimal."
     )
+sync_uploaded_files_and_autoreset(uploads)
 
-colA1, colA2, = st.columns([2,1.6])
+colA1, colA2, = st.columns([2,1])
 
 with colA1:
     colB, colC = st.columns([1, 1])
 
     with colB:
         tipe_publikasi = st.selectbox(
-            "Tipe publikasi",
-            ["Monolingual", "Bilingual"],
+            "Bahasa publikasi",
+            ["Bahasa Indonesia", "Campuran"],
             help="Pilih tipe yang sesuai untuk memudahkan program memeriksa dokumen"
         )   
     
@@ -199,7 +236,7 @@ with colA1:
 
 with colA2:
     user_vocab_text = st.text_area(
-            "Masukkan kata tambahan jika ada",
+            "Masukkan kata tambahan",
             height = 150,
             placeholder = "Contoh:\nStunting\nBig Data\n...",
             help = "Masukan kata yang khusus dan tidak ada di KBBI, seperti nama orang atau tempat"
@@ -406,9 +443,9 @@ if run_btn:
         st.session_state.review_mode = False
         st.session_state.csv_ready = False
 
-def _do_preview():
-    st.session_state.preview_show = True
-    st.session_state.preview_file = file_pilih
+# def _do_preview():
+#     st.session_state.preview_show = True
+#     st.session_state.preview_file = file_pilih
 
 if st.session_state.report_ready and st.session_state.df is not None:
     df_raw = st.session_state.df
@@ -417,6 +454,7 @@ if st.session_state.report_ready and st.session_state.df is not None:
         "symspell": "🔴 Kesalahan penulisan",
         "no_candidates": "⚪ Kata tidak dikenali",
         "space_error": "🟡 Kesalahan spasi",
+        "capital_error": "🟡 Kapital awal kalimat",
         "abbr_candidate": "⚪ Singkatan tidak dikenali",
         "confusion": "🔴 Kesalahan penulisan",
         "affix_typo": "🔴 Kesalahan penulisan",
@@ -430,7 +468,7 @@ if st.session_state.report_ready and st.session_state.df is not None:
     c1.metric("Total temuan", int(len(df_view)))
     c2.metric("Jumlah file", int(df_view["file"].nunique()) if "file" in df_view.columns else 0)
     
-    TOTAL_TYPO_LABEL = {"🔴 Kesalahan penulisan", "🟡 Kesalahan spasi"}
+    TOTAL_TYPO_LABEL = {"🔴 Kesalahan penulisan", "🟡 Kesalahan spasi", "🟡 Kapital awal kalimat"}
     total_typo = int(df_view["status"].isin(TOTAL_TYPO_LABEL).sum()) if "status" in df_view.columns else 0
     c3.metric("Total kesalahan penulisan", total_typo)
 
@@ -463,87 +501,87 @@ if st.session_state.report_ready and st.session_state.df is not None:
             st.dataframe(top_tokens, width='stretch')
 
     with tab2:
-        st.markdown("**Lihat preview dokumen**")
-        file_pilih = None
-        if "pdf_cache_by_name" not in st.session_state:
-            st.session_state.pdf_cache_by_name = {}
+        # st.markdown("**Lihat preview dokumen**")
+        # file_pilih = None
+        # if "pdf_cache_by_name" not in st.session_state:
+        #     st.session_state.pdf_cache_by_name = {}
             
-        if "file" in df_view.columns:
-            options = sorted(df_view["file"].dropna().astype(str).unique())
-            options = ["— Pilih file —"] + options
-            file_pilih = st.selectbox("Pilih file", options) if len(options) else None
+        # if "file" in df_view.columns:
+        #     options = sorted(df_view["file"].dropna().astype(str).unique())
+        #     options = ["— Pilih file —"] + options
+        #     file_pilih = st.selectbox("Pilih file", options) if len(options) else None
             
-            if file_pilih == "— Pilih file —":
-                file_pilih = None
+        #     if file_pilih == "— Pilih file —":
+        #         file_pilih = None
 
-        preview_btn = st.button("Tampilkan preview", type="secondary", on_click=_do_preview)
-        if st.session_state.preview_show and st.session_state.preview_file:
-            file_to_render = st.session_state.preview_file
-            b = st.session_state.upload_bytes_by_name.get(file_to_render)
+        # preview_btn = st.button("Tampilkan preview", type="secondary", on_click=_do_preview)
+        # if st.session_state.preview_show and st.session_state.preview_file:
+        #     file_to_render = st.session_state.preview_file
+        #     b = st.session_state.upload_bytes_by_name.get(file_to_render)
 
-            if b is None:
-                st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
-            else:
-                colsB, colsC = st.columns([2, 1])
+        #     if b is None:
+        #         st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
+        #     else:
+        #         colsB, colsC = st.columns([2, 1])
 
-                df_file = df_view[df_view["file"].astype(str) == str(file_pilih)]
-                tokens_file = df_file["token"].dropna().astype(str).tolist()
+        #         df_file = df_view[df_view["file"].astype(str) == str(file_pilih)]
+        #         tokens_file = df_file["token"].dropna().astype(str).tolist()
         
-                with colsB:
-                    with st.spinner("Menyiapkan preview dokumen..."):
-                        if file_pilih.lower().endswith(".pdf"):
-                            st.pdf(b, height=600)
+        #         with colsB:
+        #             with st.spinner("Menyiapkan preview dokumen..."):
+        #                 if file_pilih.lower().endswith(".pdf"):
+        #                     st.pdf(b, height=600)
 
-                            with colsC:
-                                st.markdown("**Kata temuan**")
-                                df_pages = locate_tokens_in_pdf_pages(b, tokens_file)
-                                if df_pages.empty:
-                                    st.info("Tidak ada match ditemukan (mungkin PDF scan / tidak ada text layer).")
-                                else:
-                                    df_pages = df_pages.sort_values(["kata", "page"])
-                                    st.dataframe(df_pages, use_container_width=True, height=600)
+        #                     with colsC:
+        #                         st.markdown("**Kata temuan**")
+        #                         df_pages = locate_tokens_in_pdf_pages(b, tokens_file)
+        #                         if df_pages.empty:
+        #                             st.info("Tidak ada match ditemukan (mungkin PDF scan / tidak ada text layer).")
+        #                         else:
+        #                             df_pages = df_pages.sort_values(["kata", "page"])
+        #                             st.dataframe(df_pages, width='stretch', height=600)
                                     
-                        elif file_pilih.lower().endswith(".docx"):
-                            try:
-                                docx_hl = highlight_terms_docx_bytes(
-                                    b,
-                                    tokens_file,
-                                    case_insensitive=True,
-                                    whole_word=True,
-                                )
-                            except Exception as e:
-                                st.error(f"Gagal highlight DOCX: {e}")
-                                docx_hl = b
+        #                 elif file_pilih.lower().endswith(".docx"):
+        #                     try:
+        #                         docx_hl = highlight_terms_docx_bytes(
+        #                             b,
+        #                             tokens_file,
+        #                             case_insensitive=True,
+        #                             whole_word=True,
+        #                         )
+        #                     except Exception as e:
+        #                         st.error(f"Gagal highlight DOCX: {e}")
+        #                         docx_hl = b
 
-                            cached_pdf = st.session_state.pdf_cache_by_name.get(file_pilih)
-                            if cached_pdf is None:
-                                try:
-                                    pdf_bytes = docx_bytes_to_pdf_bytes(docx_hl)
-                                    st.session_state.pdf_cache_by_name[file_pilih] = pdf_bytes
-                                    cached_pdf = pdf_bytes
-                                except Exception as e:
-                                    st.error(f"Gagal convert DOCX ke PDF: {e}")
-                                    pdf_bytes = None
-                                    cached_pdf = None
+        #                     cached_pdf = st.session_state.pdf_cache_by_name.get(file_pilih)
+        #                     if cached_pdf is None:
+        #                         try:
+        #                             pdf_bytes = docx_bytes_to_pdf_bytes(docx_hl)
+        #                             st.session_state.pdf_cache_by_name[file_pilih] = pdf_bytes
+        #                             cached_pdf = pdf_bytes
+        #                         except Exception as e:
+        #                             st.error(f"Gagal convert DOCX ke PDF: {e}")
+        #                             pdf_bytes = None
+        #                             cached_pdf = None
         
-                            if cached_pdf is not None:
-                                st.pdf(cached_pdf, height=600)
+        #                     if cached_pdf is not None:
+        #                         st.pdf(cached_pdf, height=600)
         
-                                with colsC:
-                                    st.markdown("**Kata temuan**")
-                                    df_pages = locate_tokens_in_pdf_pages(cached_pdf, tokens_file)
-                                    if df_pages.empty:
-                                        st.info("Tidak ada match ditemukan (PDF hasil konversi tidak punya text layer yang terdeteksi).")
-                                    else:
-                                        df_pages = (
-                                            df_pages.sort_values("page", ascending=True)[["kata", "page"]]
-                                            .reset_index(drop=True)
-                                        )
-                                        st.dataframe(df_pages, use_container_width=True, height=500)
+        #                         with colsC:
+        #                             st.markdown("**Kata temuan**")
+        #                             df_pages = locate_tokens_in_pdf_pages(cached_pdf, tokens_file)
+        #                             if df_pages.empty:
+        #                                 st.info("Tidak ada match ditemukan (PDF hasil konversi tidak punya text layer yang terdeteksi).")
+        #                             else:
+        #                                 df_pages = (
+        #                                     df_pages.sort_values("page", ascending=True)[["kata", "page"]]
+        #                                     .reset_index(drop=True)
+        #                                 )
+        #                                 st.dataframe(df_pages, width='stretch', height=500)
         
-                        else:
-                            st.error("Format file tidak didukung.")
-        
+        #                 else:
+        #                     st.error("Format file tidak didukung.")
+
         st.markdown("**Temuan per file**")
         if "file" in df_view.columns and len(df_view) > 0:
             by_file = (
@@ -582,8 +620,24 @@ if st.session_state.report_ready and st.session_state.df is not None:
         )
         st.dataframe(pre_detail.head(500), width='stretch', height=520)
 
+        if "token" in df_view.columns and len(df_view) > 0:
+            vc = df_view["token"].value_counts(dropna=False)
+            vc = vc[vc > 5]
+
+            if not vc.empty:
+                st.write(" ")
+                st.markdown("**Kata ini sering muncul, apakah merupakan sebuah kata yang benar?**")
+                st.caption("Jika memang merupakan kata yang benar, centanglah kata tersebut saat seleksi pilihan kata.")
+
+                sering_muncul = (
+                    vc.head(10)
+                    .rename_axis("Kata")
+                    .reset_index(name="Jumlah")
+                )
+                st.dataframe(sering_muncul, width='stretch')
+
     st.markdown("---")
-    start_review = st.button("Mulai Review pilihan typo", type="primary")
+    start_review = st.button("Mulai Seleksi Pilihan Kata", type="primary")
     if start_review:
         st.session_state.review_mode = True
 
@@ -594,6 +648,7 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
         "symspell": "🔴 Kesalahan penulisan",
         "no_candidates": "⚪ Kata tidak dikenali",
         "space_error": "🟡 Kesalahan spasi",
+        "capital_error": "🟡 Kapital awal kalimat",
         "abbr_candidate": "⚪ Singkatan tidak dikenali",
         "confusion": "🔴 Kesalahan penulisan",
         "affix_typo": "🔴 Kesalahan penulisan",
@@ -608,15 +663,11 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
         df["fix_final"] = ""
     if "ignore" not in df.columns:
         df["ignore"] = False
-    if "ignore_reason" not in df.columns:
-        df["ignore_reason"] = ""
-    if "ignore_note" not in df.columns:
-        df["ignore_note"] = ""
 
     st.subheader("Review & Seleksi")
     st.write("Silahkan seleksi jika ada kata yang salah koreksi oleh sistem. Centanglah kata yang bukan typo/salah koreksi.")
     st.caption(
-        "Segmen pada table review: 🟦 Informasi; 🟩 Fix; 🟨 Review.  \n"  
+        "Segmen pada table: 🟩 Fix; 🟨 Review.  \n"  
         "Bantu perkembangan sistem ini dengan mengisi kolom pada segmen 🟨 Review, agar sistem dapat lebih mengoreksi lebih optimal."
     )
 
@@ -638,9 +689,10 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
         )
     with cols[2]:
         st.write(" ")
+        st.write(" ")
         show_only_fixable = st.checkbox("Hanya tampilkan yang akan diperbaiki", value=False)
 
-    review_cols = ["ignore", "fix_choice", "fix_custom", "ignore_reason", "ignore_note"]
+    review_cols = ["ignore", "fix_choice", "fix_custom"]
     info_cols = [c for c in ["token", "status_disp", "suggestion_1", "suggestion_2", "suggestion_3"] if c in df.columns]
 
     filtered = df
@@ -653,47 +705,45 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
 
     display_cols = ["_rid"] + info_cols + review_cols
     view = filtered[display_cols].copy()
+    view = apply_maps_to_df(view)
 
-    reason_options = ["", "Kata yg benar", "Saran salah", "Nama/istilah khusus", "Singkatan", "Bahasa campuran", "Lainnya"]
+    st.session_state["_rid_order_for_editor"] = view["_rid"].astype(int).tolist()
 
     edited = st.data_editor(
         view,
-        key="review_editor",
+        key=EDITOR_KEY,
+        on_change=commit_from_editor_state,
+        hide_index=True,
         width='stretch',
         height=520,
         num_rows="fixed",
         column_config={
-            "token": st.column_config.TextColumn("🟦 Kata"),
-            "status_disp": st.column_config.TextColumn("🟦 Status"),
-            "suggestion_1": st.column_config.TextColumn("🟦 Saran 1"),
-            "suggestion_2": st.column_config.TextColumn("🟦 Saran 2"),
-            "suggestion_3": st.column_config.TextColumn("🟦 Saran 3"),
+            "token": st.column_config.TextColumn("Kata"),
+            "status_disp": st.column_config.TextColumn("Status kesalahan"),
+            "suggestion_1": st.column_config.TextColumn("Saran 1"),
+            "suggestion_2": st.column_config.TextColumn("Saran 2"),
+            "suggestion_3": st.column_config.TextColumn("Saran 3"),
             "ignore": st.column_config.CheckboxColumn(
                 "🟩 Salah koreksi",
                 help="Centang jika ini BUKAN typo dan tidak perlu diperbaiki atau koreksi salah",
                 default=False,
             ),
-            "fix_choice": st.column_config.TextColumn(
+            "fix_choice": st.column_config.SelectboxColumn(
                 "🟩 Pilih koreksi",
-                help="Isi 1 untuk Saran 1, 2 untuk Saran 2, 3 untuk Saran 3. Kosong = pakai custom.",
+                help="Pilih Saran 1-3 (jika tersedia) atau '➕ Manual'.",
+                options=["Saran 1", "Saran 2", "Saran 3", "➕ Manual"],
             ),
             "fix_custom": st.column_config.TextColumn(
                 "🟩 Koreksi manual",
                 help="Isi jika pilih 'custom'",
             ),
-            "ignore_reason": st.column_config.SelectboxColumn(
-                "🟨 Alasan",
-                options=reason_options,
-                help="Pilih alasan kenapa diabaikan",
-            ),
-            "ignore_note": st.column_config.TextColumn(
-                "🟨 Catatan (opsional)",
-                help="Misal: kata yang benar, konteks, atau saran alternatif",
-            ),
             "_rid": st.column_config.NumberColumn("ID", disabled=True),
         },
         disabled=[c for c in view.columns if c not in review_cols]
     )
+    st.session_state.salah_koreksi.update(dict(zip(edited["_rid"].astype(int), edited["ignore"].astype(bool))))
+    st.session_state.pilihan_koreksi.update(dict(zip(edited["_rid"].astype(int), edited["fix_choice"].astype(str))))
+    st.session_state.koreksi_manual.update(dict(zip(edited["_rid"].astype(int), edited["fix_custom"].astype(str))))
 
     base = df.set_index("_rid")
     ed = edited.set_index("_rid")
@@ -731,27 +781,58 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
     df["fix_final"] = df.apply(_final_fix, axis=1)
     st.session_state.df = df
 
-    colB1, colB2, = st.columns([2,3])
-    with colB1:
-        auto_text = st.text_input(
-            "Masukkan rentang yang salah koreksi",
-            placeholder="Misal: 1-5, 7-9",
-            key="auto_ignore_ranges",
-        )
-        apply_auto = st.button("Centang kata", type="secondary")
+    st.caption("Setelah seleksi selesai, isi review di bawah dan klik Perbaiki typo untuk membuat output berdasarkan pilihanmu.")
+    
+    reason_options = ["", "Kata yg benar", "Saran salah", "Nama/istilah khusus", "Singkatan", "Bahasa campuran", "Lainnya"]
+    selected_rids = [rid for rid, v in st.session_state.salah_koreksi.items() if v]
 
-    if apply_auto:
-        ids = parse_id_ranges(auto_text)
-        if "_rid" in df.columns and ids:
-            df.loc[df["_rid"].isin(ids), "ignore"] = True
-            st.session_state.df = df
-            st.rerun()
+    with st.popover("🟨 Review salah koreksi"):
+        if not selected_rids:
+            st.info("Tidak ada kata yang salah koreksi.")
         else:
-            st.warning("Tidak ada ID valid yang terdeteksi, atau kolom _rid belum tersedia.")
+            df_selected = view[
+                view["_rid"].isin(selected_rids)
+            ].copy().sort_values("_rid")
 
+            for _, row in df_selected.iterrows():
+                rid = int(row["_rid"])
+                kata = row["token"]
+
+                if rid not in st.session_state.review_alasan:
+                    st.session_state.review_alasan[rid] = "-"
+                if rid not in st.session_state.review_catatan:
+                    st.session_state.review_catatan[rid] = ""
+
+                st.markdown(f"**Kata:** {kata}")
+
+                c1, c2 = st.columns([1, 1])
+                with c1:
+                    alasan = st.selectbox(
+                        "Alasan",
+                        options=reason_options,
+                        index=reason_options.index(st.session_state.review_alasan[rid])
+                        if st.session_state.review_alasan[rid] in reason_options else 0,
+                        key=f"alasan_{rid}",
+                        label_visibility="collapsed",
+                    )
+                with c2:
+                    catatan = st.text_input(
+                        "Catatan",
+                        value=st.session_state.review_catatan[rid],
+                        key=f"catatan_{rid}",
+                        label_visibility="collapsed",
+                        placeholder="Catatan (opsional)...",
+                    )
+
+                st.session_state.review_alasan[rid] = alasan
+                st.session_state.review_catatan[rid] = catatan
+
+                st.divider()
+
+            st.caption(f"Total dicentang: {len(selected_rids)}")
+    
     st.markdown("---")
-    st.caption("Setelah review selesai, klik Perbaiki typo untuk membuat output berdasarkan pilihanmu.")
-
+    
     highlight_out = st.checkbox("Sertakan highlight pada draft hasil", value=True, key="highlight_out")
     fix_btn = st.button("Perbaiki typo", type="secondary")
 
@@ -905,6 +986,6 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
 
 st.markdown("---")
 st.caption(
-    "Catatan: Produk ini memakai kamus & model yang masih dikembangkan. "
+    "Catatan: Beta ini memakai kamus & model yang masih dikembangkan. "
     "Data akan selalu diupdate untuk memaksimalkan performa."
 )
