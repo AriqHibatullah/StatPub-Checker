@@ -1,13 +1,10 @@
 from __future__ import annotations
 from typing import Dict, Any, List, Optional
 
-# You already have SuggestEngine in suggest.py at project root.
-# This wrapper only normalizes keys so downstream code can rely on:
-# - suggestions[i]["suggestion"] and suggestions[i]["confidence"]
 try:
-    from suggest import SuggestEngine  # type: ignore
-except Exception as e:  # pragma: no cover
-    SuggestEngine = None  # type: ignore
+    from suggest import SuggestEngine 
+except Exception as e:
+    SuggestEngine = None
 
 def build_engine() -> Any:
     if SuggestEngine is None:
