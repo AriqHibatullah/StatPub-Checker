@@ -24,13 +24,9 @@ WL_DIR = DATA_DIR / "whitelist"
 MODEL_DIR = DATA_DIR / "models"
 
 from spellchecker.vocab.loaders import load_kbbi_words, load_txt_set
+from spellchecker.resources.load_storage import load_resources_from_storage
 from spellchecker.pipeline import run_on_file, build_vocabs
 from spellchecker.settings import Settings
-from spellchecker.vocab.load_storage import (
-    load_manifest,
-    load_txt_set_from_storage,
-    download_to_tempfile,
-)
 
 from spellchecker.extractors.docx_extractor import docx_bytes_to_pdf_bytes
 from spellchecker.session.ensure import ensure_session_state, sync_uploaded_files_and_autoreset
@@ -116,56 +112,11 @@ st.title("📂 Masukkan file untuk diperiksa")
 st.caption("Upload DOCX/PDF → sistem menghasilkan temuan typo + saran koreksi.")
 
 # =========================
-# Resource loading (cached)
+# Resource load
 # =========================
-@st.cache_resource
-def load_resources():
-    kbbi = load_kbbi_words(DICT_DIR / "kbbi.csv")
-    kamus_id = load_txt_set(DICT_DIR / "kamus_indonesia.txt")
-    dictionary_en = load_txt_set(DICT_DIR / "dictionary_en.txt")
-    kamus_en = load_txt_set(DICT_DIR / "kamus_inggris.txt")
-    singkatan = load_txt_set(DICT_DIR / "singkatan.txt")
-    english_vocab = dictionary_en| kamus_en | singkatan
-    domain_terms = load_txt_set(DICT_DIR / "domain_terms.txt")
-
-    prov = load_txt_set(WL_DIR / "provinsi.txt") if (WL_DIR / "provinsi.txt").exists() else set()
-    kabkot = load_txt_set(WL_DIR / "kabupaten_kota.txt") if (WL_DIR / "kabupaten_kota.txt").exists() else set()
-    kec = load_txt_set(WL_DIR / "kecamatan_sda.txt") if (WL_DIR / "kecamatan_sda.txt").exists() else set()
-    negara = load_txt_set(WL_DIR / "negara.txt") if (WL_DIR / "negara.txt").exists() else set()
-    satuan = load_txt_set(WL_DIR / "satuan_unit.txt") if (WL_DIR / "satuan_unit.txt").exists() else set()
-    ignore_vocab = prov | kabkot | kec | negara | satuan
-
-    protected_phrases = load_txt_set(WL_DIR / "protected_phrases.txt") if (WL_DIR / "protected_phrases.txt").exists() else set()
-
-    protected_names_raw = load_txt_set(WL_DIR / "protected_names.txt") if (WL_DIR / "protected_names.txt").exists() else set()
-    protected_name_tokens = set()
-    for line in protected_names_raw:
-        for w in line.split():
-            protected_name_tokens.add(w.lower())
-
-    known_vocab, english_vocab, known_vocab_for_names = build_vocabs(
-        kbbi=kbbi,
-        kamus_id=kamus_id,
-        domain_terms=domain_terms,
-        kamus_en=english_vocab,
-        singkatan=singkatan,
-        ignore_vocab=ignore_vocab,
-    )
-
-    return dict(
-        kbbi=kbbi,
-        kamus_id=kamus_id,
-        domain_terms=domain_terms,
-        known_vocab=known_vocab,
-        english_vocab=english_vocab,
-        known_vocab_for_names=known_vocab_for_names,
-        ignore_vocab=ignore_vocab,
-        protected_phrases=protected_phrases,
-        protected_name_tokens=protected_name_tokens,
-    )
-
 ensure_session_state()
-resources = load_resources()
+data_storage = st.secrets.get("STORAGE")
+resources = load_resources_from_storage(bucket=data_storage)
 EDITOR_KEY = "tabel_seleksi"
 
 # =========================
