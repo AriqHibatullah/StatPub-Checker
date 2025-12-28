@@ -3,7 +3,6 @@ from __future__ import annotations
 import io
 import csv
 import json
-import pickle
 from typing import Dict, Set
 
 import streamlit as st
@@ -63,8 +62,6 @@ def load_suggest_models_from_storage(bucket: str, version: str) -> dict:
             path=path,
         )
 
-    index_payload = pickle.loads(get("models/symspell_id.pkl"))
-
     unigram_obj = load_json_from_bytes(get("models/unigram_freq.json"))
     unigram = load_unigram_freq_from_obj(unigram_obj)
 
@@ -72,7 +69,6 @@ def load_suggest_models_from_storage(bucket: str, version: str) -> dict:
     split_join = load_json_from_bytes(get("models/split_join_rules.json")) or {}
 
     return {
-        "index_payload": index_payload,
         "unigram": unigram,
         "confusions": confusions,
         "split_join": split_join,
