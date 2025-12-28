@@ -81,12 +81,12 @@ with st.sidebar:
         """)
     with st.expander("ℹ️ Release Note Terbaru"):
         st.markdown("""
-            ## v0.4.0\n
+            ## v0.4.1\n
             - Menambahkan input Tipe publikasi untuk pengguna
             - Menghapus input Threshold Confidence untuk pengguna
             - Menambahkan sedikit penyesuaian pada program untuk developer
         """)
-    st.info("Version 0.4.0")
+    st.info("Version 0.4.1")
 
     st.write(" ")
     st.write(" ")
