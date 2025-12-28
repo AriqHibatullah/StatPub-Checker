@@ -110,4 +110,8 @@ def load_resources_from_storage_versioned(
         ignore_vocab=ignore_vocab,
         protected_phrases=protected_phrases,
         protected_name_tokens=protected_name_tokens,
+
+        kamus_en=kamus_en,
+        singkatan=singkatan,
+        dictionary_en=dictionary_en,
     )
