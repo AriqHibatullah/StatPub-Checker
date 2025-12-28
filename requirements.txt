@@ -6,3 +6,4 @@ Sastrawi
 supabase
 streamlit-pdf
 pymupdf
+requests>=2.31.0
