@@ -6,7 +6,7 @@ from typing import Dict, Set
 
 import streamlit as st
 
-from spellchecker.storage.supabase_reader import download_private_bytes
+from spellchecker.storage.read_storage import download_private_bytes
 from spellchecker.pipeline import build_vocabs
 
 
