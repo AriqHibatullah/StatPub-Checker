@@ -9,7 +9,7 @@ except Exception as e:
 def build_engine() -> Any:
     if SuggestEngine is None:
         raise ImportError("SuggestEngine not found. Make sure suggest.py is available in PYTHONPATH.")
-    return SuggestEngine()
+    return SuggestEngine(english_vocab=resources["english_vocab"], singkatan=resources["singkatan"],)
 
 def normalize_suggestions(suggs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     out = []
