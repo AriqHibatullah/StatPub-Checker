@@ -9,7 +9,6 @@ import streamlit as st
 from spellchecker.vocab.read_storage import download_private_bytes
 from spellchecker.pipeline import build_vocabs
 
-
 def _read_txt_set_from_bytes(b: bytes, encoding: str = "utf-8") -> Set[str]:
     txt = b.decode(encoding, errors="replace")
     out = set()
@@ -19,7 +18,6 @@ def _read_txt_set_from_bytes(b: bytes, encoding: str = "utf-8") -> Set[str]:
             continue
         out.add(s.lower())
     return out
-
 
 def _read_kbbi_csv_from_bytes(b: bytes, encoding: str = "utf-8") -> Set[str]:
     txt = b.decode(encoding, errors="replace")
@@ -33,21 +31,14 @@ def _read_kbbi_csv_from_bytes(b: bytes, encoding: str = "utf-8") -> Set[str]:
             out.add(word.lower())
     return out
 
-
 def _sb() -> tuple[str, str]:
     url = st.secrets["URL"]
     key = st.secrets["ROLE_KEY"]
     return url, key
 
-
-@st.cache_data(show_spinner="Memuat kamus dari Data Storage…")
-def load_resources_from_storage(
-    *,
-    bucket: str,
-    version_path: str = "meta/version.txt",
-) -> Dict[str, Set[str]]:
+@st.cache_data(show_spinner="Cek versi kamus…")
+def load_storage_version(bucket: str, version_path: str = "meta/version.txt") -> str:
     supabase_url, service_key = _sb()
-
     try:
         vbytes = download_private_bytes(
             supabase_url=supabase_url,
@@ -55,9 +46,18 @@ def load_resources_from_storage(
             bucket=bucket,
             path=version_path,
         )
-        version = vbytes.decode("utf-8", errors="replace").strip()
+        v = vbytes.decode("utf-8", errors="replace").strip()
+        return v or "no-version"
     except Exception:
-        version = "no-version"
+        return "no-version"
+        
+@st.cache_data(show_spinner="Memuat kamus dari Data Storage…")
+def load_resources_from_storage_versioned(
+    *,
+    bucket: str,
+    version: str,
+) -> Dict[str, Set[str]]:
+    supabase_url, service_key = _sb()
 
     def get(path: str) -> bytes:
         return download_private_bytes(
@@ -99,8 +99,6 @@ def load_resources_from_storage(
         singkatan=singkatan,
         ignore_vocab=ignore_vocab,
     )
-
-    _ = version
 
     return dict(
         kbbi=kbbi,
