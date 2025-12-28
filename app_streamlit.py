@@ -32,7 +32,7 @@ from spellchecker.vocab.load_storage import (
     download_to_tempfile,
 )
 
-# from spellchecker.extractors.docx_extractor import docx_bytes_to_pdf_bytes
+from spellchecker.extractors.docx_extractor import docx_bytes_to_pdf_bytes
 from spellchecker.session.ensure import ensure_session_state, sync_uploaded_files_and_autoreset
 from spellchecker.output.docx_highlighter import replace_and_highlight_docx_bytes, transfer_case
 from spellchecker.session.review_helpers import apply_maps_to_df, commit_from_editor_state
@@ -43,7 +43,7 @@ from spellchecker.output.reporter import SupabaseConfig, upload_dev_run_report
 # =========================
 # Streamlit config
 # =========================
-st.set_page_config(page_title="StatPub Checker Beta", layout="wide")
+st.set_page_config(page_title="StatPub Checker", layout="wide")
 st.markdown("""
     <style>
     header[data-testid="stHeader"] {
@@ -98,11 +98,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 with st.sidebar:
-    st.title("📊 StatPub Checker Beta 📃")
+    st.title("📊 StatPub Checker 📃")
     st.caption("Lihat demo Web App StatPub Checker [di sini](https://docs.streamlit.io).")
     with st.expander("📘 Cara penggunaan"):
         st.markdown("""
-            Panduan lengkap bagaimana cara menggunakan StatPub Checker tersedia [di sini](https://docs.streamlit.io).
+            Panduan lengkap bagaimana cara menggunakan StatPub Checker tersedia [di sini](https://drive.google.com/file/d/1fFY97-FEgeOVvuf18r_1Ckvz6hHMjwD2/view?usp=sharing).
         """)
     with st.expander("ℹ️ Release Note Terbaru"):
         st.markdown("""
@@ -443,9 +443,9 @@ if run_btn:
         st.session_state.review_mode = False
         st.session_state.csv_ready = False
 
-# def _do_preview():
-#     st.session_state.preview_show = True
-#     st.session_state.preview_file = file_pilih
+def _do_preview():
+    st.session_state.preview_show = True
+    st.session_state.preview_file = file_pilih
 
 if st.session_state.report_ready and st.session_state.df is not None:
     df_raw = st.session_state.df
@@ -501,86 +501,86 @@ if st.session_state.report_ready and st.session_state.df is not None:
             st.dataframe(top_tokens, width='stretch')
 
     with tab2:
-        # st.markdown("**Lihat preview dokumen**")
-        # file_pilih = None
-        # if "pdf_cache_by_name" not in st.session_state:
-        #     st.session_state.pdf_cache_by_name = {}
+        st.markdown("**Lihat preview dokumen**")
+        file_pilih = None
+        if "pdf_cache_by_name" not in st.session_state:
+            st.session_state.pdf_cache_by_name = {}
             
-        # if "file" in df_view.columns:
-        #     options = sorted(df_view["file"].dropna().astype(str).unique())
-        #     options = ["— Pilih file —"] + options
-        #     file_pilih = st.selectbox("Pilih file", options) if len(options) else None
+        if "file" in df_view.columns:
+            options = sorted(df_view["file"].dropna().astype(str).unique())
+            options = ["— Pilih file —"] + options
+            file_pilih = st.selectbox("Pilih file", options) if len(options) else None
             
-        #     if file_pilih == "— Pilih file —":
-        #         file_pilih = None
+            if file_pilih == "— Pilih file —":
+                file_pilih = None
 
-        # preview_btn = st.button("Tampilkan preview", type="secondary", on_click=_do_preview)
-        # if st.session_state.preview_show and st.session_state.preview_file:
-        #     file_to_render = st.session_state.preview_file
-        #     b = st.session_state.upload_bytes_by_name.get(file_to_render)
+        preview_btn = st.button("Tampilkan preview", type="secondary", on_click=_do_preview)
+        if st.session_state.preview_show and st.session_state.preview_file:
+            file_to_render = st.session_state.preview_file
+            b = st.session_state.upload_bytes_by_name.get(file_to_render)
 
-        #     if b is None:
-        #         st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
-        #     else:
-        #         colsB, colsC = st.columns([2, 1])
+            if b is None:
+                st.error("File tidak ditemukan. Silakan upload ulang atau jalankan proses lagi.")
+            else:
+                colsB, colsC = st.columns([2, 1])
 
-        #         df_file = df_view[df_view["file"].astype(str) == str(file_pilih)]
-        #         tokens_file = df_file["token"].dropna().astype(str).tolist()
+                df_file = df_view[df_view["file"].astype(str) == str(file_pilih)]
+                tokens_file = df_file["token"].dropna().astype(str).tolist()
         
-        #         with colsB:
-        #             with st.spinner("Menyiapkan preview dokumen..."):
-        #                 if file_pilih.lower().endswith(".pdf"):
-        #                     st.pdf(b, height=600)
+                with colsB:
+                    with st.spinner("Menyiapkan preview dokumen..."):
+                        if file_pilih.lower().endswith(".pdf"):
+                            st.pdf(b, height=600)
 
-        #                     with colsC:
-        #                         st.markdown("**Kata temuan**")
-        #                         df_pages = locate_tokens_in_pdf_pages(b, tokens_file)
-        #                         if df_pages.empty:
-        #                             st.info("Tidak ada match ditemukan (mungkin PDF scan / tidak ada text layer).")
-        #                         else:
-        #                             df_pages = df_pages.sort_values(["kata", "page"])
-        #                             st.dataframe(df_pages, width='stretch', height=600)
+                            with colsC:
+                                st.markdown("**Kata temuan**")
+                                df_pages = locate_tokens_in_pdf_pages(b, tokens_file)
+                                if df_pages.empty:
+                                    st.info("Tidak ada match ditemukan (mungkin PDF scan / tidak ada text layer).")
+                                else:
+                                    df_pages = df_pages.sort_values(["kata", "page"])
+                                    st.dataframe(df_pages, width='stretch', height=600)
                                     
-        #                 elif file_pilih.lower().endswith(".docx"):
-        #                     try:
-        #                         docx_hl = highlight_terms_docx_bytes(
-        #                             b,
-        #                             tokens_file,
-        #                             case_insensitive=True,
-        #                             whole_word=True,
-        #                         )
-        #                     except Exception as e:
-        #                         st.error(f"Gagal highlight DOCX: {e}")
-        #                         docx_hl = b
+                        elif file_pilih.lower().endswith(".docx"):
+                            try:
+                                docx_hl = highlight_terms_docx_bytes(
+                                    b,
+                                    tokens_file,
+                                    case_insensitive=True,
+                                    whole_word=True,
+                                )
+                            except Exception as e:
+                                st.error(f"Gagal highlight DOCX: {e}")
+                                docx_hl = b
 
-        #                     cached_pdf = st.session_state.pdf_cache_by_name.get(file_pilih)
-        #                     if cached_pdf is None:
-        #                         try:
-        #                             pdf_bytes = docx_bytes_to_pdf_bytes(docx_hl)
-        #                             st.session_state.pdf_cache_by_name[file_pilih] = pdf_bytes
-        #                             cached_pdf = pdf_bytes
-        #                         except Exception as e:
-        #                             st.error(f"Gagal convert DOCX ke PDF: {e}")
-        #                             pdf_bytes = None
-        #                             cached_pdf = None
+                            cached_pdf = st.session_state.pdf_cache_by_name.get(file_pilih)
+                            if cached_pdf is None:
+                                try:
+                                    pdf_bytes = docx_bytes_to_pdf_bytes(docx_hl)
+                                    st.session_state.pdf_cache_by_name[file_pilih] = pdf_bytes
+                                    cached_pdf = pdf_bytes
+                                except Exception as e:
+                                    st.error(f"Gagal convert DOCX ke PDF: {e}")
+                                    pdf_bytes = None
+                                    cached_pdf = None
         
-        #                     if cached_pdf is not None:
-        #                         st.pdf(cached_pdf, height=600)
+                            if cached_pdf is not None:
+                                st.pdf(cached_pdf, height=600)
         
-        #                         with colsC:
-        #                             st.markdown("**Kata temuan**")
-        #                             df_pages = locate_tokens_in_pdf_pages(cached_pdf, tokens_file)
-        #                             if df_pages.empty:
-        #                                 st.info("Tidak ada match ditemukan (PDF hasil konversi tidak punya text layer yang terdeteksi).")
-        #                             else:
-        #                                 df_pages = (
-        #                                     df_pages.sort_values("page", ascending=True)[["kata", "page"]]
-        #                                     .reset_index(drop=True)
-        #                                 )
-        #                                 st.dataframe(df_pages, width='stretch', height=500)
+                                with colsC:
+                                    st.markdown("**Kata temuan**")
+                                    df_pages = locate_tokens_in_pdf_pages(cached_pdf, tokens_file)
+                                    if df_pages.empty:
+                                        st.info("Tidak ada match ditemukan (PDF hasil konversi tidak punya text layer yang terdeteksi).")
+                                    else:
+                                        df_pages = (
+                                            df_pages.sort_values("page", ascending=True)[["kata", "page"]]
+                                            .reset_index(drop=True)
+                                        )
+                                        st.dataframe(df_pages, width='stretch', height=500)
         
-        #                 else:
-        #                     st.error("Format file tidak didukung.")
+                        else:
+                            st.error("Format file tidak didukung.")
 
         st.markdown("**Temuan per file**")
         if "file" in df_view.columns and len(df_view) > 0:
@@ -925,67 +925,67 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
                 mime="application/zip",
             )
 
-        # try:
-        #     df_raw_dev = st.session_state.get("df_raw_dev")
-        #     if df_raw_dev is None:
-        #         df_raw_dev = df_all.copy()
+        try:
+            df_raw_dev = st.session_state.get("df_raw_dev")
+            if df_raw_dev is None:
+                df_raw_dev = df_all.copy()
 
-        #     df_eval_full = df_all.copy()
+            df_eval_full = df_all.copy()
 
-        #     meta = {
-        #         "run_id": run_id,
-        #         "ts_utc": ts_utc,
-        #         "files": sorted(list(st.session_state.get("upload_bytes_by_name", {}).keys())),
-        #         "config": {
-        #             "topk": int(topk),
-        #             "max_findings": int(max_findings),
-        #             "show_only_top1_if_conf_ge": float(show_only_top1_if_conf_ge),
-        #         },
-        #         "summary": {
-        #             "total_findings": int(len(df_eval_full)),
-        #             "replaced": int((df_eval_full["action"] == "replaced").sum()) if "action" in df_eval_full.columns else None,
-        #             "ignored": int((df_eval_full["action"] == "ignored").sum()) if "action" in df_eval_full.columns else None,
-        #         },
-        #         "user_vocab": st.session_state.get("user_vocab", []),
-        #         "user_vocab_count": len(st.session_state.get("user_vocab", [])),
-        #         "app_version": "0.2.0",
-        #     }
+            meta = {
+                "run_id": run_id,
+                "ts_utc": ts_utc,
+                "files": sorted(list(st.session_state.get("upload_bytes_by_name", {}).keys())),
+                "config": {
+                    "topk": int(topk),
+                    "max_findings": int(max_findings),
+                    "show_only_top1_if_conf_ge": float(show_only_top1_if_conf_ge),
+                },
+                "summary": {
+                    "total_findings": int(len(df_eval_full)),
+                    "replaced": int((df_eval_full["action"] == "replaced").sum()) if "action" in df_eval_full.columns else None,
+                    "ignored": int((df_eval_full["action"] == "ignored").sum()) if "action" in df_eval_full.columns else None,
+                },
+                "user_vocab": st.session_state.get("user_vocab", []),
+                "user_vocab_count": len(st.session_state.get("user_vocab", [])),
+                "app_version": "0.2.0",
+            }
 
-        #     bucket = "dev-reports"
-        #     base_path = f"{date_str}/{run_id}"
+            bucket = "dev-reports"
+            base_path = f"{date_str}/{run_id}"
 
-        #     cfg_sb = SupabaseConfig(
-        #         url=st.secrets["SUPABASE_URL"],
-        #         service_role_key=st.secrets["SUPABASE_SERVICE_ROLE_KEY"],
-        #     )
+            cfg_sb = SupabaseConfig(
+                url=st.secrets["SUPABASE_URL"],
+                service_role_key=st.secrets["SUPABASE_SERVICE_ROLE_KEY"],
+            )
 
-        #     uv = "\n".join(st.session_state.get("user_vocab", [])) + "\n"
+            uv = "\n".join(st.session_state.get("user_vocab", [])) + "\n"
 
-        #     upload_dev_run_report(
-        #         cfg=cfg_sb,
-        #         bucket=bucket,
-        #         base_path=base_path,
-        #         raw_findings_csv=df_raw_dev.to_csv(index=False).encode("utf-8"),
-        #         eval_full_csv=df_eval_full.to_csv(index=False).encode("utf-8"),
-        #         meta=meta,
-        #         user_vocab_txt=uv.encode("utf-8"),
-        #     )
+            upload_dev_run_report(
+                cfg=cfg_sb,
+                bucket=bucket,
+                base_path=base_path,
+                raw_findings_csv=df_raw_dev.to_csv(index=False).encode("utf-8"),
+                eval_full_csv=df_eval_full.to_csv(index=False).encode("utf-8"),
+                meta=meta,
+                user_vocab_txt=uv.encode("utf-8"),
+            )
 
-        #     try:
-        #         send_dev_report_email(
-        #             secrets=st.secrets,
-        #             run_id=run_id,
-        #             base_path=base_path,
-        #             total_findings=len(df_eval_full),
-        #         )
-        #     except Exception as e:
-        #         st.warning(f"(Dev) Email notif gagal: {e}")
+            try:
+                send_dev_report_email(
+                    secrets=st.secrets,
+                    run_id=run_id,
+                    base_path=base_path,
+                    total_findings=len(df_eval_full),
+                )
+            except Exception as e:
+                st.warning(f"(Dev) Email notif gagal: {e}")
 
-        # except Exception as e:
-        #     st.warning(f"(Dev) Upload report gagal: {e}")
+        except Exception as e:
+            st.warning(f"(Dev) Upload report gagal: {e}")
 
 st.markdown("---")
 st.caption(
-    "Catatan: Beta ini memakai kamus & model yang masih dikembangkan. "
+    "Catatan: Produk ini memakai kamus & model yang masih dikembangkan. "
     "Data akan selalu diupdate untuk memaksimalkan performa."
 )
