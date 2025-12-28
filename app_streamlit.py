@@ -269,6 +269,8 @@ def run_pipeline_on_paths(paths: List[str], resources: dict, user_vocab: set) ->
             domain_terms=resources["domain_terms"],
             protected_phrases=resources["protected_phrases"],
             protected_name_tokens=resources["protected_name_tokens"],
+            resources=resources,
+            user_vocab=user_vocab,
         )
         all_findings.extend(findings)
 
