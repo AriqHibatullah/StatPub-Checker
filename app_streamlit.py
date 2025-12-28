@@ -13,10 +13,10 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
-from spellchecker.vocab.loaders import load_kbbi_words, load_txt_set
-from spellchecker.vocab.load_storage import load_storage_version, load_resources_from_storage_versioned
 from spellchecker.pipeline import run_on_file, build_vocabs
 from spellchecker.settings import Settings
+from spellchecker.vocab.loaders import load_kbbi_words, load_txt_set
+from spellchecker.vocab.load_storage import load_storage_version, load_resources_from_storage_versioned, load_suggest_models_from_storage
 
 from spellchecker.extractors.docx_extractor import docx_bytes_to_pdf_bytes
 from spellchecker.session.ensure import ensure_session_state, sync_uploaded_files_and_autoreset
@@ -105,9 +105,12 @@ st.caption("Upload DOCX/PDF → sistem menghasilkan temuan typo + saran koreksi.
 # Resource load
 # =========================
 ensure_session_state()
+
 data_storage = st.secrets["STORAGE"]
 ver = load_storage_version(data_storage)
 resources = load_resources_from_storage_versioned(bucket=data_storage, version=ver)
+models = load_suggest_models_from_storage(data_storage, ver)
+
 EDITOR_KEY = "tabel_seleksi"
 
 # =========================
