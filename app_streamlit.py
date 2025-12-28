@@ -35,6 +35,7 @@ from spellchecker.vocab.load_storage import (
 from spellchecker.extractors.docx_extractor import docx_bytes_to_pdf_bytes
 from spellchecker.session.ensure import ensure_session_state, sync_uploaded_files_and_autoreset
 from spellchecker.output.docx_highlighter import replace_and_highlight_docx_bytes, transfer_case
+from spellchecker.output.preview_highlight import highlight_terms_docx_bytes
 from spellchecker.session.review_helpers import apply_maps_to_df, commit_from_editor_state
 
 from spellchecker.output.notifier_resend import send_dev_report_email
