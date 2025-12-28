@@ -14,6 +14,7 @@ import pandas as pd
 import streamlit as st
 
 from spellchecker.pipeline import run_on_file, build_vocabs
+from spellchecker.engine.suggest_wrapper import build_engine
 from spellchecker.settings import Settings
 from spellchecker.vocab.loaders import load_kbbi_words, load_txt_set
 from spellchecker.vocab.load_storage import load_storage_version, load_resources_from_storage_versioned, load_suggest_models_from_storage
@@ -248,20 +249,22 @@ def parse_id_ranges(text: str) -> set[int]:
                 ids.add(int(part))
     return ids
 
-def run_pipeline_on_paths(paths: List[str], resources: dict, user_vocab: set) -> List[Any]:
+def run_pipeline_on_paths(paths: List[str], resources: dict, user_vocab: set, models: dict | None = None):
     cfg = Settings(
         topk=int(3),
         max_findings_per_file=int(max_findings),
         show_only_top1_if_conf_ge=float(show_only_top1_if_conf_ge),
     )
-
     known_vocab_plus = set(resources["known_vocab"]) | set(user_vocab or set())
+
+    eng = build_engine(resources, models)
 
     all_findings: List[Any] = []
     for p in paths:
         findings, meta = run_on_file(
             path=p,
             cfg=cfg,
+            eng=eng,
             known_vocab=known_vocab_plus,
             english_vocab=resources["english_vocab"],
             known_vocab_for_names=resources["known_vocab_for_names"],
@@ -269,8 +272,6 @@ def run_pipeline_on_paths(paths: List[str], resources: dict, user_vocab: set) ->
             domain_terms=resources["domain_terms"],
             protected_phrases=resources["protected_phrases"],
             protected_name_tokens=resources["protected_name_tokens"],
-            resources=resources,
-            user_vocab=user_vocab,
         )
         all_findings.extend(findings)
 
@@ -341,7 +342,7 @@ if run_btn:
         st.info(f"Memproses {len(saved_paths)} file…")
 
         with st.spinner("Running spellcheck…"):
-            findings = run_pipeline_on_paths(saved_paths, resources, set(user_vocab or []))
+            findings = run_pipeline_on_paths(saved_paths, resources, set(user_vocab or []), models=models)
 
         df = findings_to_dataframe(findings)
 
