@@ -120,41 +120,24 @@ st.caption("Upload DOCX/PDF → sistem menghasilkan temuan typo + saran koreksi.
 # =========================
 @st.cache_resource
 def load_resources():
-    manifest = load_manifest()
-    ver = manifest["version"]
-    files = manifest["files"]
+    kbbi = load_kbbi_words(DICT_DIR / "kbbi.csv")
+    kamus_id = load_txt_set(DICT_DIR / "kamus_indonesia.txt")
+    dictionary_en = load_txt_set(DICT_DIR / "dictionary_en.txt")
+    kamus_en = load_txt_set(DICT_DIR / "kamus_inggris.txt")
+    singkatan = load_txt_set(DICT_DIR / "singkatan.txt")
+    english_vocab = dictionary_en| kamus_en | singkatan
+    domain_terms = load_txt_set(DICT_DIR / "domain_terms.txt")
 
-    kbbi_path = download_to_tempfile(files["kbbi"], suffix=".csv", version=ver)
-    kbbi = load_kbbi_words(kbbi_path)
+    prov = load_txt_set(WL_DIR / "provinsi.txt") if (WL_DIR / "provinsi.txt").exists() else set()
+    kabkot = load_txt_set(WL_DIR / "kabupaten_kota.txt") if (WL_DIR / "kabupaten_kota.txt").exists() else set()
+    kec = load_txt_set(WL_DIR / "kecamatan_sda.txt") if (WL_DIR / "kecamatan_sda.txt").exists() else set()
+    negara = load_txt_set(WL_DIR / "negara.txt") if (WL_DIR / "negara.txt").exists() else set()
+    satuan = load_txt_set(WL_DIR / "satuan_unit.txt") if (WL_DIR / "satuan_unit.txt").exists() else set()
+    ignore_vocab = prov | kabkot | kec | negara | satuan
 
-    kamus_id = load_txt_set_from_storage(files["kamus_indonesia"], ver)
+    protected_phrases = load_txt_set(WL_DIR / "protected_phrases.txt") if (WL_DIR / "protected_phrases.txt").exists() else set()
 
-    dictionary_en = load_txt_set_from_storage(files["dictionary_en"], ver)
-    kamus_en = load_txt_set_from_storage(files["kamus_inggris"], ver)
-    singkatan = load_txt_set_from_storage(files["singkatan"], ver)
-    english_vocab = dictionary_en | kamus_en | singkatan
-
-    domain_terms = load_txt_set_from_storage(files["domain_terms"], ver)
-
-    protected_phrases = load_txt_set_from_storage(files["protected_phrase"], ver)
-    protected_names_raw = load_txt_set_from_storage(files["protected_names"], ver)
-
-    gelar_dan_sapaan = load_txt_set_from_storage(files["gelar_dan_sapaan"], ver)
-    instansi = load_txt_set_from_storage(files["instansi"], ver)
-    kode_dan_nomor = load_txt_set_from_storage(files["kode_dan_nomor"], ver)
-    nama_tempat = load_txt_set_from_storage(files["nama_tempat"], ver)
-    satuan_unit = load_txt_set_from_storage(files["satuan_unit"], ver)
-    sidoarjo_terms = load_txt_set_from_storage(files["sidoarjo_terms"], ver)
-
-    ignore_vocab = (
-        gelar_dan_sapaan
-        | instansi
-        | kode_dan_nomor
-        | nama_tempat
-        | satuan_unit
-        | sidoarjo_terms
-    )
-
+    protected_names_raw = load_txt_set(WL_DIR / "protected_names.txt") if (WL_DIR / "protected_names.txt").exists() else set()
     protected_name_tokens = set()
     for line in protected_names_raw:
         for w in line.split():
@@ -179,7 +162,6 @@ def load_resources():
         ignore_vocab=ignore_vocab,
         protected_phrases=protected_phrases,
         protected_name_tokens=protected_name_tokens,
-        manifest_version=ver,
     )
 
 ensure_session_state()
