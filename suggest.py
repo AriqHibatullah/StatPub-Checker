@@ -189,9 +189,6 @@ class SuggestEngine:
     def __init__(
         self,
         index_pkl: str = INDEX_PKL,
-        unigram_json: str = UNIGRAM_JSON,
-        confusions_json: str = CONFUSIONS_JSON,
-        split_join_json: str = SPLIT_JOIN_JSON,
         english_vocab: Set[str] | None = None,
         singkatan: Set[str] | None = None,
         models: dict | None = None,
@@ -266,6 +263,7 @@ class SuggestEngine:
 
         status = "no_candidates" if not ranked else "symspell"
         return {"token": raw, "normalized": tok, "status": status, "suggestions": ranked}
+
 
 
 
