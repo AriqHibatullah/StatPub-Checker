@@ -51,8 +51,7 @@ def _sb() -> tuple[str, str]:
     
 @st.cache_data(show_spinner="Memuat model SuggestEngine…")
 def load_suggest_models_from_storage(bucket: str, version: str) -> dict:
-    url = st.secrets["URL"]
-    key = st.secrets["ROLE_KEY"]
+    url, key = _sb()
 
     def get(path: str) -> bytes:
         return download_private_bytes(
