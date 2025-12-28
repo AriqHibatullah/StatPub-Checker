@@ -59,7 +59,7 @@ def run_on_file(
     protected_name_tokens: Set[str],
 ) -> Tuple[List[Finding], Dict[str, Any]]:
     base = os.path.basename(path)
-    eng = build_engine()
+    eng = build_engine(resources, models)
     stemmer = StemmerFactory().create_stemmer()
 
     findings: List[Finding] = []
