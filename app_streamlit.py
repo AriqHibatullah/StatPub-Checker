@@ -77,28 +77,17 @@ st.markdown("""
     [data-testid="stSidebar"] {
         background: #fafcfa !important;
     }
-    [data-testid="stExpander"] [data-baseweb="select"] > div {
-        min-height: 32px !important;
+    section[data-testid="stSidebar"] {
+        width: 320px !important;
     }
-    [data-testid="stExpander"] input {
-        height: 32px !important;
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
-        font-size: 13px !important;
-    }
-    [data-testid="stExpander"] div[role="combobox"] {
-        font-size: 13px !important;
-    }
-    [data-testid="stExpander"] .stMarkdown, 
-    [data-testid="stExpander"] p {
-        font-size: 13px !important;
-        margin-bottom: 0.25rem !important;
+    section[data-testid="stSidebar"] > div {
+        width: 320px !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
 with st.sidebar:
-    st.title("📊 StatPub Checker 📃")
+    st.title("🔮 StatPub Checker 📃")
     st.caption("Lihat demo Web App StatPub Checker [di sini](https://docs.streamlit.io).")
     with st.expander("📘 Cara penggunaan"):
         st.markdown("""
@@ -106,12 +95,12 @@ with st.sidebar:
         """)
     with st.expander("ℹ️ Release Note Terbaru"):
         st.markdown("""
-            ## v0.2.1\n
+            ## v0.4.0\n
             - Menambahkan input Tipe publikasi untuk pengguna
             - Menghapus input Threshold Confidence untuk pengguna
             - Menambahkan sedikit penyesuaian pada program untuk developer
         """)
-    st.info("Version 0.2.1")
+    st.info("Version 0.4.0")
 
     st.write(" ")
     st.write(" ")
