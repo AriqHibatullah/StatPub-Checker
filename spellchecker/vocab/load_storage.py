@@ -81,7 +81,7 @@ def load_resources_from_storage(
     nama_tempat = _read_txt_set_from_bytes(get("wl/nama_tempat.txt"))
     sidoarjo_terms = _read_txt_set_from_bytes(get("wl/sidoarjo_terms.txt"))
     satuan = _read_txt_set_from_bytes(get("wl/satuan_unit.txt"))
-    ignore_vocab = prov | kabkot | kec | negara | satuan
+    ignore_vocab = nama_tempat | sidoarjo_terms | satuan
 
     protected_phrases = _read_txt_set_from_bytes(get("wl/protected_phrases.txt"))
 
