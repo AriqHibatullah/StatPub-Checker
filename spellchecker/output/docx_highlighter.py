@@ -228,7 +228,6 @@ def highlight_terms_docx_bytes(
     return out.getvalue()
 
 def locate_tokens_in_pdf_pages(pdf_bytes: bytes, tokens: list[str], *, min_len: int = 3):
-    import fitz
     toks = []
     for t in tokens:
         t = (t or "").strip()
@@ -240,6 +239,7 @@ def locate_tokens_in_pdf_pages(pdf_bytes: bytes, tokens: list[str], *, min_len: 
 
     tokset = {t.lower() for t in toks}
 
+    import fitz
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     rows = []
 
@@ -260,6 +260,7 @@ def locate_tokens_in_pdf_pages(pdf_bytes: bytes, tokens: list[str], *, min_len: 
 
     df = pd.DataFrame(rows, columns=["kata", "page", "hits"])
     return df
+
 
 
 
