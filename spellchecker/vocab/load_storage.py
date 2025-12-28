@@ -35,7 +35,35 @@ def _sb() -> tuple[str, str]:
     url = st.secrets["URL"]
     key = st.secrets["ROLE_KEY"]
     return url, key
+    
+@st.cache_data(show_spinner="Memuat model SuggestEngine…")
+def load_suggest_models_from_storage(bucket: str, version: str) -> dict:
+    url = st.secrets["URL"]
+    key = st.secrets["ROLE_KEY"]
 
+    def get(path: str) -> bytes:
+        return download_private_bytes(
+            supabase_url=url,
+            service_role_key=key,
+            bucket=bucket,
+            path=path,
+        )
+
+    index_payload = pickle.loads(get("models/symspell_id.pkl"))
+
+    unigram_obj = load_json_from_bytes(get("models/unigram_freq.json"))
+    unigram = load_unigram_freq_from_obj(unigram_obj)
+
+    confusions = load_json_from_bytes(get("models/confusion.json")) or {}
+    split_join = load_json_from_bytes(get("models/split_join_rules.json")) or {}
+
+    return {
+        "index_payload": index_payload,
+        "unigram": unigram,
+        "confusions": confusions,
+        "split_join": split_join,
+    }
+    
 @st.cache_data(show_spinner="Cek versi kamus…")
 def load_storage_version(bucket: str, version_path: str = "meta/version.txt") -> str:
     supabase_url, service_key = _sb()
