@@ -32,6 +32,18 @@ def _read_kbbi_csv_from_bytes(b: bytes, encoding: str = "utf-8") -> Set[str]:
             out.add(word.lower())
     return out
 
+def load_json_from_bytes(b: bytes) -> Any:
+    if not b:
+        return {}
+    return json.loads(b.decode("utf-8", errors="replace"))
+
+def load_unigram_freq_from_obj(data: Any) -> Dict[str, int]:
+    if isinstance(data, dict) and "freq" in data and isinstance(data["freq"], dict):
+        return {k: int(v) for k, v in data["freq"].items()}
+    if isinstance(data, dict):
+        return {k: int(v) for k, v in data.items()}
+    return {}
+
 def _sb() -> tuple[str, str]:
     url = st.secrets["URL"]
     key = st.secrets["ROLE_KEY"]
