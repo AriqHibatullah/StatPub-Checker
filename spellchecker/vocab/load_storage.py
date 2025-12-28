@@ -35,8 +35,8 @@ def _read_kbbi_csv_from_bytes(b: bytes, encoding: str = "utf-8") -> Set[str]:
 
 
 def _sb() -> tuple[str, str]:
-    url = st.secrets["SUPABASE_URL"]
-    key = st.secrets["SUPABASE_SERVICE_ROLE_KEY"]
+    url = st.secrets["URL"]
+    key = st.secrets["ROLE_KEY"]
     return url, key
 
 
