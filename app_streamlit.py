@@ -13,18 +13,8 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
-# =========================
-# Fixed project paths
-# =========================
-BASE_DIR = Path(__file__).parent
-DATA_DIR = BASE_DIR / "data"
-
-DICT_DIR = DATA_DIR / "dictionaries"
-WL_DIR = DATA_DIR / "whitelist"
-MODEL_DIR = DATA_DIR / "models"
-
 from spellchecker.vocab.loaders import load_kbbi_words, load_txt_set
-from spellchecker.resources.load_storage import load_resources_from_storage
+from spellchecker.vocab.load_storage import load_resources_from_storage
 from spellchecker.pipeline import run_on_file, build_vocabs
 from spellchecker.settings import Settings
 
