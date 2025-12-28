@@ -664,7 +664,7 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
         show_only_fixable = st.checkbox("Hanya tampilkan yang akan diperbaiki", value=False)
 
     review_cols = ["ignore", "fix_choice", "fix_custom"]
-    info_cols = [c for c in ["token", "status_disp", "suggestion_1", "suggestion_2", "suggestion_3"] if c in df.columns]
+    info_cols = [c for c in ["status_disp", "token", "suggestion_1", "suggestion_2", "suggestion_3"] if c in df.columns]
 
     filtered = df
     if file_filter and "file" in filtered.columns:
@@ -691,9 +691,9 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
         column_config={
             "token": st.column_config.TextColumn("Kata"),
             "status_disp": st.column_config.TextColumn("Status kesalahan"),
-            "suggestion_1": st.column_config.TextColumn("Saran 1"),
-            "suggestion_2": st.column_config.TextColumn("Saran 2"),
-            "suggestion_3": st.column_config.TextColumn("Saran 3"),
+            "suggestion_1": st.column_config.TextColumn("🟦 Saran 1"),
+            "suggestion_2": st.column_config.TextColumn("🟦 Saran 2"),
+            "suggestion_3": st.column_config.TextColumn("🟦 Saran 3"),
             "ignore": st.column_config.CheckboxColumn(
                 "🟩 Salah koreksi",
                 help="Centang jika ini BUKAN typo dan tidak perlu diperbaiki atau koreksi salah",
