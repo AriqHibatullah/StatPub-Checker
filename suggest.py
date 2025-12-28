@@ -13,6 +13,7 @@ from typing import Dict, List, Tuple, Set, Any
 MAX_EDIT = 2
 TOPK = 5
 PREFIX_LEN = 7
+INDEX_PKL = "models/symspell_id.pkl"
     
 # =========================
 # Normalization & basic skip
@@ -165,7 +166,7 @@ class SuggestEngine:
         models: dict | None = None,
     ):
         if models is not None:
-            payload = models["index_payload"]
+            payload = self._load_index(index_pkl)
             self.unigram = models["unigram"]
             self.confusions = models["confusions"] or {}
             self.split_join = models["split_join"] or {}
@@ -234,5 +235,6 @@ class SuggestEngine:
 
         status = "no_candidates" if not ranked else "symspell"
         return {"token": raw, "normalized": tok, "status": status, "suggestions": ranked}
+
 
 
