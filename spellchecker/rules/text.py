@@ -2,6 +2,7 @@ from __future__ import annotations
 import re, unicodedata
 from typing import Iterable, Tuple, List, Set
 
+WORD_RE = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ'’]+(?:-[A-Za-zÀ-ÖØ-öø-ÿ'’]+)*|\d+")
 RE_PUNCT = re.compile(r"[^\w\s]+", re.UNICODE)
 RE_URL = re.compile(r"(?i)\b(?:https?://|ftp://|www\.)\S+")
 RE_DOMAIN = re.compile(
@@ -71,20 +72,29 @@ def tokenize_with_context(text: str, window: int = 120):
 
 def tokenize_docx_paragraph_with_context(text: str, window: int = 45):
     raw = normalize_text_keep_case(text)
-    cleaned = RE_PUNCT.sub(" ", raw)
 
     out = []
-    for m in re.finditer(r"\S+", cleaned):
-        tok_orig = m.group(0).strip()
+    for m in WORD_RE.finditer(raw):
+        tok_orig = m.group(0)
         if not tok_orig:
             continue
+
         tok_norm = tok_orig.lower()
 
-        start = max(0, m.start() - window)
-        end = min(len(raw), m.end() + window)
+        s0 = max(0, m.start() - window)
+        s1 = min(len(raw), m.end() + window)
 
-        snippet_raw = raw[start:end].strip().lower()
-        snippet_clean = cleaned[start:end].strip().lower()
+        snippet_raw = raw[s0:s1]
+        snippet_clean = RE_PUNCT.sub(" ", snippet_raw)
 
-        out.append((tok_norm, tok_orig, snippet_clean, snippet_raw))
+        out.append((tok_norm, tok_orig, snippet_clean.lower(), snippet_raw.lower(), m.start(), m.end()))
     return out
+
+def normalize_text_keep_case_call(text: str) -> str:
+    if not text:
+        return ""
+    return (
+        text
+        .replace("\u00a0", " ")
+        .replace("\u200b", "")
+    )
