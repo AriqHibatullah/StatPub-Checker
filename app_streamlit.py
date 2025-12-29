@@ -702,7 +702,7 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
 
     st.caption("Setelah seleksi selesai, isi review di bawah dan klik Perbaiki typo untuk membuat output berdasarkan pilihanmu.")
     
-    reason_options = ["", "Sebuah kata yg benar", "Saran koreksi salah", "Istilah khusus", "Singkatan", "Bahasa campuran/asing", "Lainnya"]
+    reason_options = ["", "Sebuah kata yg benar", "Saran koreksi salah", "Istilah khusus", "Singkatan", "Bahasa campuran/asing", "Nama orang/produk", "Lainnya"]
     selected_rids = [rid for rid, v in st.session_state.salah_koreksi.items() if v]
 
     with st.popover("🟨 Review salah koreksi"):
