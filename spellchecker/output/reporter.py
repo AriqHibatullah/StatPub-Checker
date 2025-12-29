@@ -30,7 +30,10 @@ def upload_bytes(
     sb.storage.from_(bucket).upload(
         path,
         content,
-        file_options={"content-type": content_type, "upsert": upsert},
+        file_options={
+            "content-type": content_type,
+            "upsert": "true" if upsert else "false",
+        },
     )
 
 
@@ -38,7 +41,7 @@ def upload_dev_run_report(
     *,
     cfg: SupabaseConfig,
     bucket: str,
-    base_path: str,  # contoh: "2025-12-23/<run_id>"
+    base_path: str,
     raw_findings_csv: bytes,
     eval_full_csv: bytes,
     meta: Dict[str, Any],
@@ -72,3 +75,4 @@ def upload_dev_run_report(
         content=user_vocab_txt,
         content_type="text/plain",
     )
+
