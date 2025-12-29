@@ -702,7 +702,7 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
 
     st.caption("Setelah seleksi selesai, isi review di bawah dan klik Perbaiki typo untuk membuat output berdasarkan pilihanmu.")
     
-    reason_options = ["", "Kata yg benar", "Saran salah", "Nama/istilah khusus", "Singkatan", "Bahasa campuran", "Lainnya"]
+    reason_options = ["", "Sebuah kata yg benar", "Saran koreksi salah", "Istilah khusus", "Singkatan", "Bahasa campuran/asing", "Lainnya"]
     selected_rids = [rid for rid, v in st.session_state.salah_koreksi.items() if v]
 
     with st.popover("🟨 Review salah koreksi"):
@@ -849,7 +849,10 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
             if df_raw_dev is None:
                 df_raw_dev = df_all.copy()
 
-            df_eval_full = df_all.copy()
+            df_eval_full = st.session_state.df.copy()
+            if "_rid" in df_eval_full.columns:
+                df_eval_full["review_alasan"] = df_eval_full["_rid"].map(st.session_state.get("review_alasan", {})).fillna("")
+                df_eval_full["review_catatan"] = df_eval_full["_rid"].map(st.session_state.get("review_catatan", {})).fillna("")
 
             meta = {
                 "run_id": run_id,
@@ -862,8 +865,8 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
                 },
                 "summary": {
                     "total_findings": int(len(df_eval_full)),
-                    "replaced": int((df_eval_full["action"] == "replaced").sum()) if "action" in df_eval_full.columns else None,
-                    "ignored": int((df_eval_full["action"] == "ignored").sum()) if "action" in df_eval_full.columns else None,
+                    "ignored_review": int(df_eval_full.get("ignore", False).sum()) if "ignore" in df_eval_full.columns else None,
+                    "has_fix_final": int((df_eval_full["fix_final"].astype(str).str.strip() != "").sum()) if "fix_final" in df_eval_full.columns else None,
                 },
                 "user_vocab": st.session_state.get("user_vocab", []),
                 "user_vocab_count": len(st.session_state.get("user_vocab", [])),
