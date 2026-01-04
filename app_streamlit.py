@@ -421,7 +421,7 @@ if st.session_state.report_ready and st.session_state.df is not None:
             st.dataframe(top_tokens, width='stretch')
 
     with tab2:
-        st.markdown("**Lihat preview dokumen**")
+        st.markdown("**Lihat preview dokumen (BETA)**")
         file_pilih = None
         if "pdf_cache_by_name" not in st.session_state:
             st.session_state.pdf_cache_by_name = {}
