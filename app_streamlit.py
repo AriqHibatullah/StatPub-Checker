@@ -24,6 +24,7 @@ from spellchecker.session.ensure import ensure_session_state, sync_uploaded_file
 from spellchecker.session.review_helpers import apply_maps_to_df, commit_from_editor_state
 
 from spellchecker.output.docx_highlighter import transfer_case, replace_and_highlight_docx_bytes, highlight_terms_docx_bytes, locate_tokens_in_pdf_pages
+from spellchecker.output.suggest_choice import resolve_fix_final
 from spellchecker.output.notifier_resend import send_dev_report_email
 from spellchecker.output.reporter import SupabaseConfig, upload_dev_run_report
 
@@ -758,6 +759,7 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
     if fix_btn:
         with st.spinner("Membuat dokumen revisi + log perubahan..."):
             df_all = st.session_state.df.copy()
+            df_all["fix_final"] = df_all.apply(resolve_fix_final, axis=1)
 
             run_id = st.session_state.get("run_id") or str(uuid.uuid4())
             st.session_state.run_id = run_id
@@ -765,11 +767,12 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
             ts_utc = st.session_state.get("run_ts_utc") or datetime.utcnow().isoformat()
 
             df_all["action"] = df_all.apply(
-                lambda r: "ignored" if r.get("ignore", False)
-                else (
+                lambda r: "ignored" if bool(r.get("ignore", False)) else (
                     "replaced"
-                    if (str(r.get("fix_final", "")).strip()
-                        and str(r.get("fix_final", "")).strip() != str(r.get("token", "")).strip())
+                    if (
+                        _clean_str(r.get("fix_final", "")) and
+                        _clean_str(r.get("fix_final", "")) != _clean_str(r.get("token", ""))
+                    )
                     else "no_fix"
                 ),
                 axis=1
@@ -810,8 +813,8 @@ if st.session_state.get("review_mode", False) and st.session_state.df is not Non
 
                     repl = {}
                     for _, r in g.iterrows():
-                        old = str(r.get("token", "")).strip()
-                        new = str(r.get("fix_final", "")).strip()
+                        old = _clean_str(r.get("token", ""))
+                        new = _clean_str(r.get("fix_final", ""))
                         if old and new and old != new:
                             repl[old] = new
 
