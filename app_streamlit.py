@@ -24,7 +24,7 @@ from spellchecker.session.ensure import ensure_session_state, sync_uploaded_file
 from spellchecker.session.review_helpers import apply_maps_to_df, commit_from_editor_state
 
 from spellchecker.output.docx_highlighter import transfer_case, replace_and_highlight_docx_bytes, highlight_terms_docx_bytes, locate_tokens_in_pdf_pages
-from spellchecker.output.suggest_choice import resolve_fix_final
+from spellchecker.output.suggest_choice import resolve_fix_final, _clean_str
 from spellchecker.output.notifier_resend import send_dev_report_email
 from spellchecker.output.reporter import SupabaseConfig, upload_dev_run_report
 
